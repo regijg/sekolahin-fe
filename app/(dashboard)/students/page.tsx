@@ -15,7 +15,7 @@ function InlineGuardianCreate({
   onCreated,
   onOpenChange,
 }: {
-  schoolId: number | undefined
+  schoolId: number | null
   onCreated: (id: number) => void
   onOpenChange?: (open: boolean) => void
 }) {
