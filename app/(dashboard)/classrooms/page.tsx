@@ -18,6 +18,9 @@ export default function ClassroomsPage() {
     {
       name: 'grade', label: 'Tingkat', type: 'select', showInTable: true,
       options: [
+        { value: 'VII', label: 'VII' },
+        { value: 'VIII', label: 'VIII' },
+        { value: 'IX', label: 'IX' },
         { value: 'X', label: 'X' },
         { value: 'XI', label: 'XI' },
         { value: 'XII', label: 'XII' },
