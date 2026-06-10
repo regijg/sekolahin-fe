@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --font-geist: 'Geist', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-geist), system-ui, sans-serif;
+}
+
+/* Force 24-hour format on time inputs (Chrome/Edge on Windows defaults to AM/PM based on OS locale) */
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+  display: none;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
