@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Modal from '@/components/ui/Modal'
+import NumberInput from '@/components/ui/NumberInput'
 import { invoiceService } from '@/lib/services'
 import type { PaymentType, Classroom } from '@/types'
 
@@ -162,23 +163,19 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nominal (Rp) <span className="text-red-500">*</span></label>
-              <input
-                type="number"
+              <NumberInput
                 value={amount}
-                onChange={e => setAmount(e.target.value)}
+                onChange={(val) => setAmount(val === '' ? '' : String(val))}
                 required
-                min={0}
-                placeholder="300000"
+                placeholder="300.000"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Denda (Rp)</label>
-              <input
-                type="number"
+              <NumberInput
                 value={lateFee}
-                onChange={e => setLateFee(e.target.value)}
-                min={0}
+                onChange={(val) => setLateFee(val === '' ? '' : String(val))}
                 placeholder="0"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

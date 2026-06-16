@@ -10,6 +10,7 @@ import { invoiceService, paymentService, studentService, paymentTypeService, cla
 import { useSchoolId } from '@/hooks/useSchoolId'
 import type { FieldConfig, Invoice } from '@/types'
 import { formatCurrency } from '@/lib/utils'
+import NumberInput from '@/components/ui/NumberInput'
 
 type PaymentDetails = { date: string; method: string; amount: string }
 
@@ -65,11 +66,9 @@ function InlinePaymentSection({
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Nominal (Rp) <span className="text-red-500">*</span></label>
-          <input
-            type="number"
+          <NumberInput
             value={amount}
-            min={0}
-            onChange={e => { setUserEdited(true); setAmount(e.target.value) }}
+            onChange={(val) => { setUserEdited(true); setAmount(val === '' ? '' : String(val)) }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
           />
         </div>

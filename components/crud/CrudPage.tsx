@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import Modal from '@/components/ui/Modal'
+import NumberInput from '@/components/ui/NumberInput'
 import Badge from '@/components/ui/Badge'
 import { Plus, Pencil, Trash2, Search, RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FieldConfig, PaginatedData } from '@/types'
@@ -83,7 +84,7 @@ export default function CrudPage<T extends { id: number }>({
   const allData = result?.data ?? []
   const meta = result?.meta
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm()
+  const { register, handleSubmit, reset, watch, setValue, control, formState: { errors, isSubmitting } } = useForm()
   const watchAll = watch() as Record<string, unknown>
 
   const createMutation = useMutation({
@@ -416,11 +417,25 @@ export default function CrudPage<T extends { id: number }>({
                       {field.placeholder || field.label}
                     </label>
                   </div>
+                ) : field.type === 'number' ? (
+                  <Controller
+                    control={control}
+                    name={field.name}
+                    rules={{ required: field.required ? `${field.label} wajib diisi` : false }}
+                    render={({ field: cf }) => (
+                      <NumberInput
+                        value={cf.value ?? ''}
+                        onChange={cf.onChange}
+                        placeholder={field.placeholder}
+                        readOnly={field.disabled}
+                        className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                      />
+                    )}
+                  />
                 ) : (
                   <input
                     {...register(field.name, {
                       required: field.required ? `${field.label} wajib diisi` : false,
-                      valueAsNumber: field.type === 'number',
                     })}
                     type={field.type}
                     placeholder={field.placeholder}
