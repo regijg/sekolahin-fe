@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import CrudPage from '@/components/crud/CrudPage'
 import Header from '@/components/layout/Header'
 import Modal from '@/components/ui/Modal'
-import { studentService, classroomService, parentGuardianService, ppdbService, fetchAllPages } from '@/lib/services'
+import { studentService, parentGuardianService, ppdbService, fetchAllPages } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import type { FieldConfig, PPDBApplication } from '@/types'
 import { ChevronDown, ChevronUp, Plus, UserPlus } from 'lucide-react'
@@ -39,7 +39,7 @@ function InlineGuardianCreate({
     setError('')
     try {
       const guardian = await parentGuardianService.create({ school_id: schoolId, name: name.trim(), phone, address })
-      qc.invalidateQueries({ queryKey: ['parent-guardians'] })
+      await qc.refetchQueries({ queryKey: ['parent-guardians'] })
       onCreated(guardian.id)
       setName(''); setPhone(''); setAddress('')
       setOpen(false); onOpenChange?.(false)
@@ -114,7 +114,6 @@ function InlineGuardianCreate({
 export default function StudentsPage() {
   const schoolId = useSchoolId()
   const qc = useQueryClient()
-  const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
   const { data: parentGuardians = [] } = useQuery({ queryKey: ['parent-guardians', 'all'], queryFn: () => fetchAllPages(parentGuardianService) })
   const { data: acceptedPpdb = [] } = useQuery<PPDBApplication[]>({ queryKey: ['ppdb', 'accepted'], queryFn: () => ppdbService.getAccepted() })
 
@@ -137,16 +136,13 @@ export default function StudentsPage() {
       ],
     },
     { name: 'birthdate', label: 'Tanggal Lahir', type: 'date', showInTable: false },
-    {
-      name: 'classroom_id', label: 'Kelas', type: 'select', required: true, showInTable: true,
-      options: classrooms.map(c => ({ value: c.id, label: c.name })),
-    },
+    { name: 'classroom_name', label: 'Kelas', type: 'text', showInTable: true, hidden: true },
     {
       name: 'parent_guardian_id', label: 'Orang Tua / Wali', type: 'select', showInTable: false,
       options: parentGuardians.map(p => ({ value: p.id, label: p.name })),
     },
     { name: 'address', label: 'Alamat', type: 'textarea', showInTable: false },
-  ], [classrooms, parentGuardians])
+  ], [parentGuardians])
 
   const hiddenValues = schoolId ? { school_id: schoolId } : {}
 

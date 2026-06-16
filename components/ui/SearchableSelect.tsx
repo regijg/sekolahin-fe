@@ -1,5 +1,6 @@
 'use client'
 
+import { useId } from 'react'
 import ReactSelect from 'react-select'
 
 export interface SelectOption {
@@ -26,10 +27,13 @@ export default function SearchableSelect({
   isLoading,
   isClearable = true,
 }: Props) {
+  const id = useId()
   const selected = options.find((o) => String(o.value) === String(value)) ?? null
 
   return (
     <ReactSelect<SelectOption>
+      instanceId={id}
+      inputId={id}
       options={options}
       value={selected}
       onChange={(opt) => onChange(opt ? String(opt.value) : '')}

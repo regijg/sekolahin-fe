@@ -28,7 +28,7 @@ export default function UserFormPage({ userId }: Props) {
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<UserFormData>()
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<UserFormData>()
 
   const { data: existingUser, isLoading: loadingUser } = useQuery<ManagedUser>({
     queryKey: ['users', userId],

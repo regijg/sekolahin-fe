@@ -57,6 +57,7 @@ const menuGroups = [
       { href: '/semesters', label: 'Semester', icon: BookMarked, permission: 'view-semesters' },
       { href: '/majors', label: 'Jurusan', icon: GraduationCap, permission: 'view-majors' },
       { href: '/classrooms', label: 'Kelas', icon: DoorOpen, permission: 'view-classrooms' },
+      { href: '/enrollments', label: 'Pendaftaran Kelas', icon: ClipboardList, permission: 'view-enrollments' },
       { href: '/subjects', label: 'Mata Pelajaran', icon: BookCopy, permission: 'view-subjects' },
     ],
   },

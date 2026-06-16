@@ -6,6 +6,7 @@ import type {
   PaginatedData,
   School,
   AcademicYear,
+  Enrollment,
   Semester,
   Major,
   Classroom,
@@ -242,6 +243,90 @@ export const academicYearService = {
     const supabase = createClient()
     const { error } = await supabase.from('academic_years').delete().eq('id', id)
     if (error) throw new Error(error.message)
+  },
+  getActive: async () => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('academic_years')
+      .select('*')
+      .eq('school_id', getSchoolId()!)
+      .eq('active', true)
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    return data as AcademicYear | null
+  },
+}
+
+// ─── Enrollments ──────────────────────────────────────────────────────────────
+
+export const enrollmentService = {
+  getAll: async (page = 1) => {
+    const supabase = createClient()
+    const { from, to } = pageRange(page)
+    const { data, count, error } = await supabase
+      .from('enrollments')
+      .select('*, students(name, nis), classrooms(name), academic_years(name)', { count: 'exact' })
+      .eq('school_id', getSchoolId()!)
+      .order('id', { ascending: false })
+      .range(from, to)
+    if (error) throw new Error(error.message)
+    return buildPaginated<Enrollment>(
+      (data ?? []).map((r: Record<string, unknown>) => ({
+        ...r,
+        student_name:       (r.students as { name: string; nis: string } | null)?.name,
+        student_nis:        (r.students as { name: string; nis: string } | null)?.nis,
+        classroom_name:     (r.classrooms as { name: string } | null)?.name,
+        academic_year_name: (r.academic_years as { name: string } | null)?.name,
+      }) as Enrollment),
+      count,
+      page
+    )
+  },
+  getByAcademicYear: async (academic_year_id: number) => {
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('enrollments')
+      .select('*, students(name, nis), classrooms(name)')
+      .eq('school_id', getSchoolId()!)
+      .eq('academic_year_id', academic_year_id)
+      .order('student_id')
+    if (error) throw new Error(error.message)
+    return (data ?? []).map((r: Record<string, unknown>) => ({
+      ...r,
+      student_name:   (r.students as { name: string; nis: string } | null)?.name,
+      student_nis:    (r.students as { name: string; nis: string } | null)?.nis,
+      classroom_name: (r.classrooms as { name: string } | null)?.name,
+    })) as Enrollment[]
+  },
+  create: async (data: unknown) => {
+    const supabase = createClient()
+    const { data: row, error } = await supabase.from('enrollments').insert(data as object).select().single()
+    if (error) throw new Error(error.message)
+    return row as Enrollment
+  },
+  update: async (id: number, data: unknown) => {
+    const supabase = createClient()
+    const { data: row, error } = await supabase.from('enrollments').update(data as object).eq('id', id).select().single()
+    if (error) throw new Error(error.message)
+    return row as Enrollment
+  },
+  delete: async (id: number) => {
+    const supabase = createClient()
+    const { error } = await supabase.from('enrollments').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+  promote: async (payload: { school_id: number; to_academic_year_id: number; assignments: Array<{ student_id: number; new_classroom_id: number }> }) => {
+    const supabase = createClient()
+    const rows = payload.assignments.map(a => ({
+      school_id: payload.school_id,
+      student_id: a.student_id,
+      classroom_id: a.new_classroom_id,
+      academic_year_id: payload.to_academic_year_id,
+      status: 'active',
+    }))
+    const { error } = await supabase.from('enrollments').upsert(rows, { onConflict: 'student_id,academic_year_id' })
+    if (error) throw new Error(error.message)
+    return { promoted: payload.assignments.length }
   },
 }
 

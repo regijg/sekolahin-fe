@@ -62,6 +62,21 @@ export interface AcademicYear {
   updated_at?: string
 }
 
+export interface Enrollment {
+  id: number
+  school_id: number
+  student_id: number
+  student_name?: string
+  student_nis?: string
+  classroom_id: number
+  classroom_name?: string
+  academic_year_id: number
+  academic_year_name?: string
+  status: 'active' | 'graduated' | 'transferred' | 'dropped'
+  created_at?: string
+  updated_at?: string
+}
+
 // Semester — DB: school_id, academic_year_id, name, active (no start/end_date)
 export interface Semester {
   id: number
