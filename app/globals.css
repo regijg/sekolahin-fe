@@ -8,6 +8,10 @@ body {
   font-family: var(--font-geist), system-ui, sans-serif;
 }
 
+button {
+  cursor: pointer;
+}
+
 /* Force 24-hour format on time inputs (Chrome/Edge on Windows defaults to AM/PM based on OS locale) */
 input[type="time"]::-webkit-datetime-edit-ampm-field {
   display: none;

@@ -778,7 +778,20 @@ export const ppdbService = {
   },
   create: async (data: unknown) => {
     const supabase = createClient()
-    const { data: row, error } = await supabase.from('ppdb_applications').insert(data as object).select().single()
+    const schoolId = getSchoolId()!
+    const year = new Date().getFullYear()
+    const { count } = await supabase
+      .from('ppdb_applications')
+      .select('*', { count: 'exact', head: true })
+      .eq('school_id', schoolId)
+      .like('registration_number', `PPDB-${year}-%`)
+    const seq = ((count ?? 0) + 1).toString().padStart(3, '0')
+    const registration_number = `PPDB-${year}-${seq}`
+    const { data: row, error } = await supabase
+      .from('ppdb_applications')
+      .insert({ ...(data as object), registration_number })
+      .select()
+      .single()
     if (error) throw new Error(error.message)
     return row as PPDBApplication
   },
