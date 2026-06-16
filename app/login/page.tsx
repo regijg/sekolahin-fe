@@ -19,20 +19,17 @@ export default function LoginPage() {
     handleSubmit,
     formState: { isSubmitting, errors },
   } = useForm<LoginForm>({
-    defaultValues: { email: 'adminsekolah@example.com', password: 'password' },
+    defaultValues: { email: 'admin@sekolahin.com', password: 'password' },
   })
 
   const onSubmit = async (data: LoginForm) => {
     setError('')
     try {
-      const auth = await authService.login(data)
-      localStorage.setItem('token', auth.token)
-      localStorage.setItem('user', JSON.stringify(auth.user))
-      document.cookie = `token=${auth.token}; path=/; max-age=${60 * 60 * 24 * 7}`
+      await authService.login(data)
       router.push('/dashboard')
+      router.refresh()
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } }
-      setError(e.response?.data?.message || 'Email atau password salah')
+      setError(err instanceof Error ? err.message : 'Email atau password salah')
     }
   }
 

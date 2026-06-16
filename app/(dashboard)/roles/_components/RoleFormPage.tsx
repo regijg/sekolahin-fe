@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import Header from '@/components/layout/Header'
 import { roleService, permissionService } from '@/lib/services'
@@ -20,31 +20,32 @@ interface Props {
 }
 
 const MODULE_LABELS: Record<string, string> = {
-  'dashboard': 'Dashboard',
-  'schools': 'Sekolah',
-  'academic-years': 'Tahun Ajaran',
-  'semesters': 'Semester',
-  'majors': 'Jurusan',
-  'classrooms': 'Kelas',
-  'subjects': 'Mata Pelajaran',
-  'teachers': 'Guru',
-  'parents': 'Orang Tua / Wali',
-  'students': 'Siswa',
-  'schedules': 'Jadwal Pelajaran',
-  'student-attendances': 'Absensi Siswa',
-  'teacher-attendances': 'Absensi Guru',
-  'ppdb': 'PPDB',
-  'announcements': 'Pengumuman',
-  'letters': 'Surat Menyurat',
-  'payment-types': 'Jenis Pembayaran',
-  'invoices': 'Tagihan',
-  'payments': 'Pembayaran',
-  'inventory-items': 'Inventaris Barang',
-  'inventory-mutations': 'Mutasi Inventaris',
-  'canteen-accounts': 'Akun Kantin',
-  'canteen-transactions': 'Transaksi Kantin',
-  'roles': 'Manajemen Role',
-  'permissions': 'Manajemen Permission',
+  'dashboard':             'Dashboard',
+  'schools':               'Sekolah',
+  'academic-years':        'Tahun Ajaran',
+  'semesters':             'Semester',
+  'majors':                'Jurusan',
+  'classrooms':            'Kelas',
+  'subjects':              'Mata Pelajaran',
+  'teachers':              'Guru',
+  'parent-guardians':      'Orang Tua / Wali',
+  'students':              'Siswa',
+  'schedules':             'Jadwal',
+  'student-attendances':   'Absensi Siswa',
+  'teacher-attendances':   'Absensi Guru',
+  'ppdb-applications':     'Pendaftaran (PPDB)',
+  'announcements':         'Pengumuman',
+  'letters':               'Surat Keterangan',
+  'payment-types':         'Jenis Pembayaran',
+  'invoices':              'Tagihan',
+  'payments':              'Pembayaran',
+  'inventory-items':       'Barang Inventaris',
+  'inventory-mutations':   'Mutasi Inventaris',
+  'canteen-accounts':      'Akun Kantin',
+  'canteen-transactions':  'Transaksi Kantin',
+  'users':                 'Pengguna',
+  'roles':                 'Roles',
+  'permissions':           'Permissions',
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -98,7 +99,12 @@ function groupPermissions(permissions: Permission[]): PermissionGroup[] {
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi)
     })
   }
-  return Array.from(map.values())
+  const moduleOrder = Object.keys(MODULE_LABELS)
+  return Array.from(map.values()).sort((a, b) => {
+    const ai = moduleOrder.indexOf(a.module)
+    const bi = moduleOrder.indexOf(b.module)
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+  })
 }
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
@@ -125,6 +131,7 @@ export default function RoleFormPage({ roleId }: Props) {
   const isEdit = !!roleId
   const isSuperAdmin = getStoredUser()?.role === 'super-admin'
   const router = useRouter()
+  const qc = useQueryClient()
 
   const [selectedPermissions, setSelectedPermissions] = useState<number[]>([])
   const [formError, setFormError] = useState('')
@@ -156,12 +163,9 @@ export default function RoleFormPage({ roleId }: Props) {
       isEdit
         ? roleService.update(roleId!, data)
         : roleService.create(data),
-    onSuccess: () => router.push('/roles'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['roles'] }); router.push('/roles') },
     onError: (e: unknown) => {
-      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
-      const msg = err.response?.data?.message
-      const errs = err.response?.data?.errors
-      setFormError(msg || (errs ? Object.values(errs).flat().join(', ') : 'Gagal menyimpan data'))
+      setFormError(e instanceof Error ? e.message : 'Gagal menyimpan data')
     },
   })
 

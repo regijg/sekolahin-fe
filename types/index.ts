@@ -89,6 +89,7 @@ export interface Classroom {
   id: number
   school_id: number
   name: string
+  level?: 'SMP' | 'SMA'
   grade?: string
   homeroom_teacher_id?: number
   created_at?: string

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import Header from '@/components/layout/Header'
 import { userService, roleService } from '@/lib/services'
@@ -23,6 +23,7 @@ interface Props {
 export default function UserFormPage({ userId }: Props) {
   const isEdit = !!userId
   const router = useRouter()
+  const qc = useQueryClient()
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -56,12 +57,9 @@ export default function UserFormPage({ userId }: Props) {
       if (isEdit && !payload.password) delete payload.password
       return isEdit ? userService.update(userId!, payload) : userService.create(payload)
     },
-    onSuccess: () => router.push('/users'),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['users'] }); router.push('/users') },
     onError: (e: unknown) => {
-      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
-      const msg = err.response?.data?.message
-      const errs = err.response?.data?.errors
-      setFormError(msg || (errs ? Object.values(errs).flat().join(', ') : 'Gagal menyimpan data'))
+      setFormError(e instanceof Error ? e.message : 'Gagal menyimpan data')
     },
   })
 

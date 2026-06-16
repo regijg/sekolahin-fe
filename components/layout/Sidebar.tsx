@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { authService } from '@/lib/services'
 import { useSidebar } from '@/context/SidebarContext'
-import { getStoredUser } from '@/lib/auth'
+import { getStoredUser, clearStoredUser } from '@/lib/auth'
+import { createClient } from '@/lib/supabase/client'
 import {
   BookOpen,
   LayoutDashboard,
@@ -52,7 +52,7 @@ const menuGroups = [
   {
     label: 'Manajemen Sekolah',
     items: [
-      { href: '/schools', label: 'Sekolah', icon: School, permission: 'view-schools' },
+      { href: '/schools', label: 'Sekolah', icon: School, permission: 'view-schools', superAdminOnly: true },
       { href: '/academic-years', label: 'Tahun Ajaran', icon: CalendarDays, permission: 'view-academic-years' },
       { href: '/semesters', label: 'Semester', icon: BookMarked, permission: 'view-semesters' },
       { href: '/majors', label: 'Jurusan', icon: GraduationCap, permission: 'view-majors' },
@@ -138,7 +138,7 @@ export default function Sidebar() {
   useEffect(() => {
     const user = getStoredUser()
     setUserPermissions(user?.permissions ?? [])
-    setIsSuperAdmin(user?.role === 'super-admin')
+    setIsSuperAdmin(!user?.school_id)
   }, [])
 
   const canView = (permission: string) =>
@@ -151,10 +151,11 @@ export default function Sidebar() {
   }
 
   const handleLogout = async () => {
-    try { await authService.logout() } catch {}
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch {}
+    clearStoredUser()
     router.push('/login')
   }
 

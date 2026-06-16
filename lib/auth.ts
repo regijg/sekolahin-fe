@@ -10,6 +10,14 @@ export function getStoredUser(): User | null {
   }
 }
 
+export function setStoredUser(user: User): void {
+  localStorage.setItem('user', JSON.stringify(user))
+}
+
+export function clearStoredUser(): void {
+  localStorage.removeItem('user')
+}
+
 export function getSchoolId(): number | null {
   return getStoredUser()?.school_id ?? null
 }

@@ -1,24 +1,51 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('token')?.value
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  // IMPORTANT: do not add code between createServerClient and supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
   const { pathname } = request.nextUrl
-
   const isAuthPage = pathname.startsWith('/login')
   const isPublicAsset = pathname.startsWith('/_next') || pathname.startsWith('/favicon')
+  const isApiRoute = pathname.startsWith('/api')
 
-  if (isPublicAsset) return NextResponse.next()
+  if (isPublicAsset || isApiRoute) return supabaseResponse
 
-  if (!token && !isAuthPage) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  if (!user && !isAuthPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 
-  if (token && isAuthPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  if (user && isAuthPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
   }
 
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {

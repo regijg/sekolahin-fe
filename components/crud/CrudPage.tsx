@@ -94,10 +94,7 @@ export default function CrudPage<T extends { id: number }>({
       closeModal()
     },
     onError: (e: unknown) => {
-      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }
-      const msg = err.response?.data?.message
-      const errs = err.response?.data?.errors
-      setFormError(msg || (errs ? Object.values(errs).flat().join(', ') : 'Gagal menyimpan data'))
+      setFormError(e instanceof Error ? e.message : 'Gagal menyimpan data')
     },
   })
 
@@ -109,8 +106,7 @@ export default function CrudPage<T extends { id: number }>({
       closeModal()
     },
     onError: (e: unknown) => {
-      const err = e as { response?: { data?: { message?: string } } }
-      setFormError(err.response?.data?.message || 'Gagal memperbarui data')
+      setFormError(e instanceof Error ? e.message : 'Gagal memperbarui data')
     },
   })
 
@@ -249,7 +245,7 @@ export default function CrudPage<T extends { id: number }>({
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-red-500 gap-2">
             <AlertCircle size={24} />
-            <span className="text-sm">Gagal memuat data. Pastikan server API berjalan.</span>
+            <span className="text-sm">Gagal memuat data.</span>
             <button onClick={() => refetch()} className="text-blue-600 text-xs underline">Coba lagi</button>
           </div>
         ) : filtered.length === 0 ? (
