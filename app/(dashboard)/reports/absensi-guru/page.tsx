@@ -7,6 +7,7 @@ import ReportWrapper from '@/components/reports/ReportWrapper'
 import { fetchAllPages, teacherAttendanceService, teacherService, schoolService } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import { MONTHS } from '@/lib/utils'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 const currentYear = new Date().getFullYear()
 const currentMonth = new Date().getMonth() + 1
@@ -58,15 +59,11 @@ export default function AbsensiGuruPage() {
           <div className="no-print grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Bulan</label>
-              <select value={month} onChange={e => setMonth(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
+              <SearchableSelect value={month} onChange={setMonth} isClearable={false} options={MONTHS.map(m => ({ value: m.value, label: m.label }))} />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Tahun</label>
-              <select value={year} onChange={e => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+              <SearchableSelect value={year} onChange={setYear} isClearable={false} options={YEARS.map(y => ({ value: y, label: String(y) }))} />
             </div>
             <div className="flex flex-col justify-end">
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-center">

@@ -11,6 +11,7 @@ import { useSchoolId } from '@/hooks/useSchoolId'
 import type { FieldConfig, Invoice } from '@/types'
 import { formatCurrency } from '@/lib/utils'
 import NumberInput from '@/components/ui/NumberInput'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 type PaymentDetails = { date: string; method: string; amount: string }
 
@@ -54,15 +55,12 @@ function InlinePaymentSection({
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Metode <span className="text-red-500">*</span></label>
-          <select
+          <SearchableSelect
             value={method}
-            onChange={e => setMethod(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-          >
-            <option value="cash">Tunai</option>
-            <option value="transfer">Transfer</option>
-            <option value="qris">QRIS</option>
-          </select>
+            onChange={setMethod}
+            isClearable={false}
+            options={[{ value: 'cash', label: 'Tunai' }, { value: 'transfer', label: 'Transfer' }, { value: 'qris', label: 'QRIS' }]}
+          />
         </div>
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Nominal (Rp) <span className="text-red-500">*</span></label>

@@ -8,6 +8,7 @@ import { fetchAllPages, invoiceService, studentService, schoolService, classroom
 import { useSchoolId } from '@/hooks/useSchoolId'
 import { formatCurrency, MONTHS } from '@/lib/utils'
 import Badge from '@/components/ui/Badge'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 export default function TagihanSiswaPage() {
   const schoolId = useSchoolId()
@@ -48,36 +49,22 @@ export default function TagihanSiswaPage() {
           <div className="no-print mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
               <label className="block text-xs font-medium text-gray-600 mb-1">Pilih Kelas <span className="text-red-500">*</span></label>
-              <select
+              <SearchableSelect
                 value={classroomId}
-                onChange={e => { setClassroomId(e.target.value); setStudentId('') }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">-- Pilih Kelas --</option>
-                {classrooms
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-              </select>
+                onChange={v => { setClassroomId(v); setStudentId('') }}
+                placeholder="-- Pilih Kelas --"
+                options={classrooms.slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => ({ value: c.id, label: c.name }))}
+              />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-medium text-gray-600 mb-1">Pilih Siswa <span className="text-red-500">*</span></label>
-              <select
+              <SearchableSelect
                 value={studentId}
-                onChange={e => setStudentId(e.target.value)}
+                onChange={setStudentId}
+                placeholder={classroomId ? '-- Pilih Siswa --' : '— Pilih kelas dulu —'}
                 disabled={!classroomId}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                <option value="">{classroomId ? '-- Pilih Siswa --' : '— Pilih kelas dulu —'}</option>
-                {filteredStudents
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.nis})</option>
-                  ))}
-              </select>
+                options={filteredStudents.slice().sort((a, b) => a.name.localeCompare(b.name)).map(s => ({ value: s.id, label: `${s.name} (${s.nis})` }))}
+              />
             </div>
           </div>
 

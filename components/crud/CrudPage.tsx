@@ -6,6 +6,7 @@ import { useForm, Controller } from 'react-hook-form'
 import Modal from '@/components/ui/Modal'
 import NumberInput from '@/components/ui/NumberInput'
 import Badge from '@/components/ui/Badge'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 import { Plus, Pencil, Trash2, Search, RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FieldConfig, PaginatedData } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -381,23 +382,28 @@ export default function CrudPage<T extends { id: number }>({
                 </label>
 
                 {field.type === 'select' ? (
-                  <select
-                    {...register(field.name, { required: field.required ? `${field.label} wajib diisi` : false })}
-                    disabled={!!(field.dependsOn && !watchAll[field.dependsOn])}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {field.dependsOn && !watchAll[field.dependsOn]
-                        ? `— Pilih ${fields.find((f) => f.name === field.dependsOn)?.label ?? 'filter'} dulu —`
-                        : '-- Pilih --'}
-                    </option>
-                    {(field.dependsOn && field.filterOptions
-                      ? field.filterOptions(watchAll[field.dependsOn])
-                      : field.options
-                    )?.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                  <Controller
+                    control={control}
+                    name={field.name}
+                    rules={{ required: field.required ? `${field.label} wajib diisi` : false }}
+                    render={({ field: cf }) => {
+                      const isDepDisabled = !!(field.dependsOn && !watchAll[field.dependsOn])
+                      const opts = (field.dependsOn && field.filterOptions
+                        ? field.filterOptions(watchAll[field.dependsOn])
+                        : field.options) ?? []
+                      return (
+                        <SearchableSelect
+                          options={opts}
+                          value={String(cf.value ?? '')}
+                          onChange={cf.onChange}
+                          placeholder={isDepDisabled
+                            ? `— Pilih ${fields.find((f) => f.name === field.dependsOn)?.label ?? 'filter'} dulu —`
+                            : undefined}
+                          disabled={isDepDisabled}
+                        />
+                      )
+                    }}
+                  />
                 ) : field.type === 'textarea' ? (
                   <textarea
                     {...register(field.name, { required: field.required ? `${field.label} wajib diisi` : false })}

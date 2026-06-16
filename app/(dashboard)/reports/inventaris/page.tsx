@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header'
 import ReportWrapper from '@/components/reports/ReportWrapper'
 import { fetchAllPages, inventoryItemService, schoolService } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 const CONDITION_LABEL: Record<string, string> = {
   good: 'Baik', damaged: 'Rusak', lost: 'Hilang',
@@ -51,10 +52,7 @@ export default function InventarisPage() {
           <div className="no-print grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <option value="">Semua Kategori</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <SearchableSelect value={category} onChange={setCategory} placeholder="Semua Kategori" options={categories.map(c => ({ value: c, label: c }))} />
             </div>
             <div className="col-span-2 flex items-end gap-2 flex-wrap">
               {groupedByCategory.map(([cat, { count, qty }]) => (

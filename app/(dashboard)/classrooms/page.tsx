@@ -2,22 +2,32 @@
 
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import Header from '@/components/layout/Header'
 import Modal from '@/components/ui/Modal'
 import { classroomService, teacherService, fetchAllPages } from '@/lib/services'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import type { Classroom } from '@/types'
 import { Plus, Pencil, Trash2, RefreshCw, AlertCircle, School } from 'lucide-react'
 
-const GRADE_OPTIONS = [
-  'SMP VII', 'SMP VIII', 'SMP IX',
-  'SMA X',   'SMA XI',   'SMA XII',
-]
+const SMP_GRADES = ['VII', 'VIII', 'IX']
+const SMA_GRADES = ['X', 'XI', 'XII']
+const JURUSAN_OPTIONS = ['IPA', 'IPS', 'Bahasa']
+
+function gradeOrder(grade: string): number {
+  const parts = grade.split(' ')
+  if (parts[0] === 'SMP') return SMP_GRADES.indexOf(parts[1] ?? '')
+  if (parts[0] === 'SMA') {
+    const g = SMA_GRADES.indexOf(parts[1] ?? '')
+    const j = JURUSAN_OPTIONS.indexOf(parts[2] ?? '')
+    return 10 + g * 4 + (j === -1 ? 0 : j + 1)
+  }
+  return 99
+}
 
 interface ClassroomForm {
   name: string
-  grade: string
   homeroom_teacher_id?: number
 }
 
@@ -28,6 +38,9 @@ export default function ClassroomsPage() {
   const [editItem, setEditItem] = useState<Classroom | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Classroom | null>(null)
   const [formError, setFormError] = useState('')
+  const [tingkat, setTingkat] = useState('')
+  const [gradeLevel, setGradeLevel] = useState('')
+  const [jurusan, setJurusan] = useState('')
 
   const { data: allClassrooms = [], isLoading, error, refetch } = useQuery<Classroom[]>({
     queryKey: ['classrooms', 'all'],
@@ -39,7 +52,7 @@ export default function ClassroomsPage() {
     queryFn: () => fetchAllPages(teacherService),
   })
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ClassroomForm>()
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<ClassroomForm>()
 
   const grouped = useMemo(() => {
     const map = new Map<string, Classroom[]>()
@@ -49,7 +62,7 @@ export default function ClassroomsPage() {
       map.get(key)!.push(c)
     })
     return Array.from(map.entries())
-      .sort((a, b) => GRADE_OPTIONS.indexOf(a[0]) - GRADE_OPTIONS.indexOf(b[0]))
+      .sort((a, b) => gradeOrder(a[0]) - gradeOrder(b[0]))
       .filter(([, items]) => items.length > 0)
   }, [allClassrooms])
 
@@ -74,18 +87,19 @@ export default function ClassroomsPage() {
 
   const openCreate = () => {
     setEditItem(null)
-    reset({ grade: 'SMP VII' })
+    setTingkat(''); setGradeLevel(''); setJurusan('')
+    reset({ name: '', homeroom_teacher_id: undefined })
     setFormError('')
     setModalOpen(true)
   }
 
   const openEdit = (item: Classroom) => {
     setEditItem(item)
-    reset({
-      name: item.name,
-      grade: item.grade ?? '',
-      homeroom_teacher_id: item.homeroom_teacher_id ?? undefined,
-    })
+    const parts = (item.grade ?? '').split(' ')
+    setTingkat(parts[0] ?? '')
+    setGradeLevel(parts[1] ?? '')
+    setJurusan(parts[2] ?? '')
+    reset({ name: item.name, homeroom_teacher_id: item.homeroom_teacher_id ?? undefined })
     setFormError('')
     setModalOpen(true)
   }
@@ -93,10 +107,17 @@ export default function ClassroomsPage() {
   const closeModal = () => { setModalOpen(false); setEditItem(null); setFormError('') }
 
   const onSubmit = (data: ClassroomForm) => {
+    if (!tingkat || !gradeLevel) {
+      setFormError('Tingkat dan grade wajib dipilih')
+      return
+    }
     setFormError('')
+    const grade = tingkat === 'SMP'
+      ? `SMP ${gradeLevel}`
+      : `SMA ${gradeLevel}${jurusan ? ' ' + jurusan : ''}`
     const payload: Record<string, unknown> = {
       name: data.name,
-      grade: data.grade,
+      grade,
       homeroom_teacher_id: data.homeroom_teacher_id ? Number(data.homeroom_teacher_id) : null,
     }
     if (schoolId) payload.school_id = schoolId
@@ -193,27 +214,45 @@ export default function ClassroomsPage() {
               <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{formError}</div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tingkat <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('grade', { required: 'Tingkat wajib dipilih' })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <optgroup label="SMP">
-                  <option value="SMP VII">VII</option>
-                  <option value="SMP VIII">VIII</option>
-                  <option value="SMP IX">IX</option>
-                </optgroup>
-                <optgroup label="SMA">
-                  <option value="SMA X">X</option>
-                  <option value="SMA XI">XI</option>
-                  <option value="SMA XII">XII</option>
-                </optgroup>
-              </select>
-              {errors.grade && <p className="text-red-500 text-xs mt-1">{errors.grade.message}</p>}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tingkat <span className="text-red-500">*</span></label>
+                <SearchableSelect
+                  value={tingkat}
+                  onChange={v => { setTingkat(v); setGradeLevel(''); setJurusan('') }}
+                  isClearable={false}
+                  placeholder="SMP / SMA"
+                  options={[{ value: 'SMP', label: 'SMP' }, { value: 'SMA', label: 'SMA' }]}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Grade <span className="text-red-500">*</span></label>
+                <SearchableSelect
+                  value={gradeLevel}
+                  onChange={setGradeLevel}
+                  isClearable={false}
+                  disabled={!tingkat}
+                  placeholder={tingkat ? '-- Pilih --' : '— Pilih tingkat dulu —'}
+                  options={tingkat === 'SMP'
+                    ? SMP_GRADES.map(g => ({ value: g, label: g }))
+                    : tingkat === 'SMA'
+                    ? SMA_GRADES.map(g => ({ value: g, label: g }))
+                    : []}
+                />
+              </div>
             </div>
+
+            {tingkat === 'SMA' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Jurusan</label>
+                <SearchableSelect
+                  value={jurusan}
+                  onChange={setJurusan}
+                  placeholder="-- Pilih Jurusan (opsional) --"
+                  options={JURUSAN_OPTIONS.map(j => ({ value: j, label: j }))}
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -222,7 +261,7 @@ export default function ClassroomsPage() {
               <input
                 {...register('name', { required: 'Nama kelas wajib diisi' })}
                 type="text"
-                placeholder="XII TKJ 1"
+                placeholder={tingkat === 'SMA' ? 'IPS A' : 'VII A'}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
@@ -230,15 +269,18 @@ export default function ClassroomsPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Wali Kelas</label>
-              <select
-                {...register('homeroom_teacher_id')}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">-- Belum ditentukan --</option>
-                {teachers.map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
+              <Controller
+                control={control}
+                name="homeroom_teacher_id"
+                render={({ field: cf }) => (
+                  <SearchableSelect
+                    value={String(cf.value ?? '')}
+                    onChange={cf.onChange}
+                    placeholder="-- Belum ditentukan --"
+                    options={teachers.map(t => ({ value: t.id, label: t.name }))}
+                  />
+                )}
+              />
             </div>
 
             <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">

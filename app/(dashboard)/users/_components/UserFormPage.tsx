@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import Header from '@/components/layout/Header'
 import { userService, roleService } from '@/lib/services'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 import type { ManagedUser, Role } from '@/types'
 import { ArrowLeft, RefreshCw, Save, Eye, EyeOff } from 'lucide-react'
 
@@ -167,15 +168,20 @@ export default function UserFormPage({ userId }: Props) {
                   <RefreshCw size={14} className="animate-spin" /> Memuat roles...
                 </div>
               ) : (
-                <select
-                  {...register('role_id', { required: 'Role wajib dipilih' })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                >
-                  <option value="">— Pilih Role —</option>
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
+                <Controller
+                  control={control}
+                  name="role_id"
+                  rules={{ required: 'Role wajib dipilih' }}
+                  render={({ field: cf }) => (
+                    <SearchableSelect
+                      value={String(cf.value ?? '')}
+                      onChange={v => cf.onChange(v ? Number(v) : '')}
+                      placeholder="— Pilih Role —"
+                      isClearable={false}
+                      options={roles.map(r => ({ value: r.id, label: r.name }))}
+                    />
+                  )}
+                />
               )}
               {errors.role_id && <p className="text-red-500 text-xs mt-1">{errors.role_id.message}</p>}
             </div>

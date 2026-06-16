@@ -8,6 +8,7 @@ import { fetchAllPages, ppdbService, schoolService } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import { formatDate } from '@/lib/utils'
 import Badge from '@/components/ui/Badge'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Semua Status' },
@@ -60,9 +61,9 @@ export default function PpdbPage() {
           {/* Filter */}
           <div className="no-print mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Filter Status</label>
-            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full sm:w-60 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-              {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+            <div className="w-full sm:w-60">
+              <SearchableSelect value={status} onChange={setStatus} placeholder="Semua Status" options={STATUS_OPTIONS.filter(s => s.value !== '').map(s => ({ value: s.value, label: s.label }))} />
+            </div>
           </div>
 
           {isLoading ? (

@@ -6,6 +6,7 @@ import { CheckCircle, RefreshCw, Save, Users } from 'lucide-react'
 import Header from '@/components/layout/Header'
 import { classroomService, studentAttendanceService, fetchAllPages } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 const TODAY = new Date().toISOString().split('T')[0]
 
@@ -92,16 +93,12 @@ export default function StudentAttendancePage() {
           <div className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-40">
               <label className="block text-xs font-medium text-gray-500 mb-1">Kelas</label>
-              <select
+              <SearchableSelect
                 value={classroomId}
-                onChange={e => { setClassroomId(e.target.value); setLoaded(false) }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Pilih kelas...</option>
-                {classrooms.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+                onChange={v => { setClassroomId(v); setLoaded(false) }}
+                placeholder="Pilih kelas..."
+                options={classrooms.map(c => ({ value: c.id, label: c.name }))}
+              />
             </div>
             <div className="flex-1 min-w-40">
               <label className="block text-xs font-medium text-gray-500 mb-1">Tanggal</label>

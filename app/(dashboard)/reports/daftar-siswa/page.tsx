@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header'
 import ReportWrapper from '@/components/reports/ReportWrapper'
 import { fetchAllPages, studentService, classroomService, schoolService } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 export default function DaftarSiswaPage() {
   const schoolId = useSchoolId()
@@ -45,10 +46,7 @@ export default function DaftarSiswaPage() {
           <div className="no-print grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
-              <select value={classroomId} onChange={e => setClassroomId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                <option value="">Semua Kelas</option>
-                {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
+              <SearchableSelect value={classroomId} onChange={setClassroomId} placeholder="Semua Kelas" options={classrooms.map(c => ({ value: c.id, label: c.name }))} />
             </div>
             <div className="col-span-2 sm:col-span-2 flex items-end gap-2 flex-wrap">
               {Array.from(groupedByClass.entries()).map(([name, count]) => (

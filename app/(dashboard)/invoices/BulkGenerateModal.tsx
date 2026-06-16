@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Modal from '@/components/ui/Modal'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 import NumberInput from '@/components/ui/NumberInput'
 import { invoiceService } from '@/lib/services'
 import type { PaymentType, Classroom } from '@/types'
@@ -105,29 +106,13 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
           {/* Jenis Pembayaran */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Pembayaran <span className="text-red-500">*</span></label>
-            <select
-              value={paymentTypeId}
-              onChange={e => setPaymentTypeId(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Pilih jenis pembayaran...</option>
-              {paymentTypes.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <SearchableSelect value={paymentTypeId} onChange={setPaymentTypeId} placeholder="Pilih jenis pembayaran..." options={paymentTypes.map(p => ({ value: p.id, label: p.name }))} />
           </div>
 
           {/* Tahun */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tahun <span className="text-red-500">*</span></label>
-            <select
-              value={year}
-              onChange={e => setYear(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <SearchableSelect value={year} onChange={setYear} isClearable={false} options={YEARS.map(y => ({ value: y, label: String(y) }))} />
           </div>
 
           {/* Bulan */}
@@ -186,16 +171,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Filter Kelas</label>
-              <select
-                value={classroomId}
-                onChange={e => setClassroomId(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-              >
-                <option value="">Semua Kelas</option>
-                {classrooms.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <SearchableSelect value={classroomId} onChange={setClassroomId} placeholder="Semua Kelas" options={classrooms.map(c => ({ value: c.id, label: c.name }))} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Jatuh Tempo</label>
