@@ -983,42 +983,60 @@ export const invoiceService = {
   },
   bulkGenerate: async (payload: unknown) => {
     const supabase = createClient()
-    const { school_id, payment_type_id, month, year, amount, due_date } = payload as {
-      school_id: number; payment_type_id: number; month: number; year: number; amount: number; due_date?: string
+    const { school_id, payment_type_id, months, year, amount, late_fee, due_date, classroom_id } = payload as {
+      school_id: number
+      payment_type_id: number
+      months: number[]
+      year: number
+      amount: number
+      late_fee?: number
+      due_date?: string | null
+      classroom_id?: number | null
     }
 
-    const [{ data: students }, { data: existing }] = await Promise.all([
-      supabase.from('students').select('id').eq('school_id', school_id),
-      supabase.from('invoices').select('student_id')
+    let studentsQuery = supabase.from('students').select('id').eq('school_id', school_id)
+    if (classroom_id) studentsQuery = studentsQuery.eq('classroom_id', classroom_id)
+    const { data: students } = await studentsQuery
+    const studentIds = (students ?? []).map((s: { id: number }) => s.id)
+
+    let totalCreated = 0
+    let totalSkipped = 0
+
+    for (const month of months) {
+      const { data: existing } = await supabase
+        .from('invoices').select('student_id')
         .eq('school_id', school_id)
         .eq('payment_type_id', payment_type_id)
         .eq('month', month)
-        .eq('year', year),
-    ])
+        .eq('year', year)
 
-    const existingIds = new Set((existing ?? []).map(e => e.student_id))
-    const newStudents = (students ?? []).filter(s => !existingIds.has(s.id))
+      const existingIds = new Set((existing ?? []).map((e: { student_id: number }) => e.student_id))
+      const newStudentIds = studentIds.filter((id: number) => !existingIds.has(id))
+      totalSkipped += existingIds.size
 
-    if (newStudents.length > 0) {
-      const { error } = await supabase.from('invoices').insert(
-        newStudents.map(s => ({
-          school_id,
-          student_id: s.id,
-          payment_type_id,
-          month,
-          year,
-          amount,
-          due_date: due_date ?? null,
-          status: 'belum_lunas',
-        }))
-      )
-      if (error) throw new Error(error.message)
+      if (newStudentIds.length > 0) {
+        const { error } = await supabase.from('invoices').insert(
+          newStudentIds.map((id: number) => ({
+            school_id,
+            student_id: id,
+            payment_type_id,
+            month,
+            year,
+            amount,
+            late_fee: late_fee ?? 0,
+            due_date: due_date ?? null,
+            status: 'belum_lunas',
+          }))
+        )
+        if (error) throw new Error(error.message)
+        totalCreated += newStudentIds.length
+      }
     }
 
     return {
-      created: newStudents.length,
-      skipped: existingIds.size,
-      total_students: (students ?? []).length,
+      created: totalCreated,
+      skipped: totalSkipped,
+      total_students: studentIds.length,
     }
   },
 }
