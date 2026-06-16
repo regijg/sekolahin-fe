@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -83,7 +83,7 @@ export default function UserFormPage({ userId }: Props) {
 
   return (
     <>
-      <Header title={isEdit ? `Edit Pengguna â€” ${existingUser?.name ?? ''}` : 'Tambah Pengguna'} />
+      <Header title={isEdit ? `Edit Pengguna — ${existingUser?.name ?? ''}` : 'Tambah Pengguna'} />
       <main className="flex-1 p-3 sm:p-6 max-w-2xl">
         <button
           onClick={() => router.push('/users')}
@@ -171,7 +171,7 @@ export default function UserFormPage({ userId }: Props) {
                   {...register('role_id', { required: 'Role wajib dipilih' })}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                 >
-                  <option value="">â€” Pilih Role â€”</option>
+                  <option value="">— Pilih Role —</option>
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}

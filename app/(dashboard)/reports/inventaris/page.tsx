@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -59,7 +59,7 @@ export default function InventarisPage() {
             <div className="col-span-2 flex items-end gap-2 flex-wrap">
               {groupedByCategory.map(([cat, { count, qty }]) => (
                 <span key={cat} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full font-medium border border-orange-100">
-                  {cat}: {count} jenis Â· {qty} unit
+                  {cat}: {count} jenis · {qty} unit
                 </span>
               ))}
             </div>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -210,7 +210,7 @@ export default function RoleFormPage({ roleId }: Props) {
 
   return (
     <>
-      <Header title={isEdit ? `Edit Role â€” ${existingRole?.name ?? ''}` : 'Tambah Role'} />
+      <Header title={isEdit ? `Edit Role — ${existingRole?.name ?? ''}` : 'Tambah Role'} />
       <main className="flex-1 p-3 sm:p-6 max-w-5xl">
         <button
           onClick={() => router.push('/roles')}

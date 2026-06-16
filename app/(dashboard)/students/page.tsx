@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -169,7 +169,7 @@ export default function StudentsPage() {
       await ppdbService.delete(id)
       qc.invalidateQueries({ queryKey: ['ppdb'] })
     } catch {
-      // silently ignore â€” student already saved
+      // silently ignore — student already saved
     }
   }, [selectedPpdbAppId, qc])
 
@@ -196,7 +196,7 @@ export default function StudentsPage() {
           guardianId = guardian.id
           qc.invalidateQueries({ queryKey: ['parent-guardians'] })
         } catch {
-          // guardian creation failed â€” proceed without pre-selecting guardian
+          // guardian creation failed — proceed without pre-selecting guardian
         }
       }
     }
@@ -255,12 +255,12 @@ export default function StudentsPage() {
               >
                 <div className="font-medium text-gray-800 text-sm">{app.name}</div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  {app.registration_number} Â· {app.gender === 'male' ? 'Laki-laki' : 'Perempuan'}
-                  {app.birthdate ? ` Â· ${app.birthdate}` : ''}
+                  {app.registration_number} · {app.gender === 'male' ? 'Laki-laki' : 'Perempuan'}
+                  {app.birthdate ? ` · ${app.birthdate}` : ''}
                 </div>
                 {app.guardian_name && (
                   <div className="text-xs text-blue-600 mt-1">
-                    Wali: {app.guardian_name} ({app.guardian_relation ?? 'wali'}){app.guardian_phone ? ` Â· ${app.guardian_phone}` : ''}
+                    Wali: {app.guardian_name} ({app.guardian_relation ?? 'wali'}){app.guardian_phone ? ` · ${app.guardian_phone}` : ''}
                   </div>
                 )}
               </button>

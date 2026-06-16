@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -149,7 +149,7 @@ export default function ClassroomsPage() {
                   <div key={key}>
                     <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
                       <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
-                      <span className="text-xs text-gray-400">Â· {items.length} kelas</span>
+                      <span className="text-xs text-gray-400">· {items.length} kelas</span>
                     </div>
                     <table className="w-full text-sm">
                       <tbody className="divide-y divide-gray-50">
@@ -187,7 +187,7 @@ export default function ClassroomsPage() {
 
         {/* Create/Edit Modal */}
         <Modal isOpen={modalOpen} onClose={closeModal}
-          title={editItem ? `Edit Kelas â€” ${editItem.name}` : 'Tambah Kelas'} size="lg">
+          title={editItem ? `Edit Kelas — ${editItem.name}` : 'Tambah Kelas'} size="lg">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {formError && (
               <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{formError}</div>

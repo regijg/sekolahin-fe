@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -309,7 +309,7 @@ export default function CrudPage<T extends { id: number }>({
         {meta && (
           <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span className="text-xs text-gray-400">
-              Total {meta.total} data Â· Halaman {meta.current_page} dari {meta.last_page}
+              Total {meta.total} data · Halaman {meta.current_page} dari {meta.last_page}
             </span>
             {meta.last_page > 1 && (
               <div className="flex items-center gap-1">
@@ -326,7 +326,7 @@ export default function CrudPage<T extends { id: number }>({
                   return (
                     <span key={p} className="flex items-center gap-1">
                       {prev && p - prev > 1 && (
-                        <span className="px-1 text-xs text-gray-400">â€¦</span>
+                        <span className="px-1 text-xs text-gray-400">…</span>
                       )}
                       <button
                         onClick={() => setPage(p)}
@@ -388,7 +388,7 @@ export default function CrudPage<T extends { id: number }>({
                   >
                     <option value="">
                       {field.dependsOn && !watchAll[field.dependsOn]
-                        ? `â€” Pilih ${fields.find((f) => f.name === field.dependsOn)?.label ?? 'filter'} dulu â€”`
+                        ? `— Pilih ${fields.find((f) => f.name === field.dependsOn)?.label ?? 'filter'} dulu —`
                         : '-- Pilih --'}
                     </option>
                     {(field.dependsOn && field.filterOptions

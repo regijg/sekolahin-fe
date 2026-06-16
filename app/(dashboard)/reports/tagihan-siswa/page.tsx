@@ -1,21 +1,27 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Header from '@/components/layout/Header'
 import ReportWrapper from '@/components/reports/ReportWrapper'
-import { fetchAllPages, invoiceService, studentService, schoolService } from '@/lib/services'
+import { fetchAllPages, invoiceService, studentService, schoolService, classroomService } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import { formatCurrency, MONTHS } from '@/lib/utils'
 import Badge from '@/components/ui/Badge'
 
 export default function TagihanSiswaPage() {
   const schoolId = useSchoolId()
+  const [classroomId, setClassroomId] = useState('')
   const [studentId, setStudentId] = useState('')
 
   const { data: school } = useQuery({ queryKey: ['school', schoolId], queryFn: () => schoolService.getById(schoolId!), enabled: !!schoolId })
+  const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
   const { data: students = [] } = useQuery({ queryKey: ['students', 'all'], queryFn: () => fetchAllPages(studentService) })
   const { data: invoices = [], isLoading } = useQuery({ queryKey: ['invoices', 'all-report'], queryFn: () => fetchAllPages(invoiceService) })
+
+  const filteredStudents = classroomId
+    ? students.filter(s => String(s.classroom_id) === classroomId)
+    : []
 
   const selectedStudent = students.find(s => String(s.id) === studentId)
 
@@ -35,25 +41,44 @@ export default function TagihanSiswaPage() {
       <main className="flex-1 p-3 sm:p-6">
         <ReportWrapper
           title="Laporan Tagihan Siswa"
-          subtitle={selectedStudent ? `${selectedStudent.name} â€” ${selectedStudent.classroom_name ?? ''}` : undefined}
+          subtitle={selectedStudent ? `${selectedStudent.name} — ${selectedStudent.classroom_name ?? ''}` : undefined}
           schoolName={school?.name}
         >
           {/* Filter */}
-          <div className="no-print mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Pilih Siswa <span className="text-red-500">*</span></label>
-            <select
-              value={studentId}
-              onChange={e => setStudentId(e.target.value)}
-              className="w-full sm:w-96 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">-- Pilih Siswa --</option>
-              {students
-                .slice()
-                .sort((a, b) => (a.classroom_name ?? '').localeCompare(b.classroom_name ?? '') || a.name.localeCompare(b.name))
-                .map(s => (
-                  <option key={s.id} value={s.id}>{s.name} â€” {s.classroom_name ?? '-'} ({s.nis})</option>
-                ))}
-            </select>
+          <div className="no-print mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Pilih Kelas <span className="text-red-500">*</span></label>
+              <select
+                value={classroomId}
+                onChange={e => { setClassroomId(e.target.value); setStudentId('') }}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="">-- Pilih Kelas --</option>
+                {classrooms
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Pilih Siswa <span className="text-red-500">*</span></label>
+              <select
+                value={studentId}
+                onChange={e => setStudentId(e.target.value)}
+                disabled={!classroomId}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+              >
+                <option value="">{classroomId ? '-- Pilih Siswa --' : '— Pilih kelas dulu —'}</option>
+                {filteredStudents
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(s => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.nis})</option>
+                  ))}
+              </select>
+            </div>
           </div>
 
           {!studentId ? (

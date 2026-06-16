@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -38,7 +38,7 @@ export default function DaftarSiswaPage() {
       <main className="flex-1 p-3 sm:p-6">
         <ReportWrapper
           title="Daftar Siswa"
-          subtitle={classroom ? classroom.name : `Semua Kelas Â· ${filtered.length} siswa`}
+          subtitle={classroom ? classroom.name : `Semua Kelas · ${filtered.length} siswa`}
           schoolName={school?.name}
         >
           {/* Filters */}

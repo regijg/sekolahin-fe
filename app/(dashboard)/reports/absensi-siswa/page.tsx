@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -57,7 +57,7 @@ export default function AbsensiSiswaPage() {
 
   const classroom = classrooms.find(c => String(c.id) === classroomId)
   const monthLabel = MONTHS.find(m => String(m.value) === month)?.label
-  const subtitle = [classroom?.name, monthLabel, year].filter(Boolean).join(' Â· ')
+  const subtitle = [classroom?.name, monthLabel, year].filter(Boolean).join(' · ')
 
   return (
     <>
@@ -140,7 +140,7 @@ export default function AbsensiSiswaPage() {
                 </table>
               </div>
               <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
-                Keterangan: Hadir = tepat waktu Â· Terlambat = masuk tapi terlambat Â· % Hadir = (Hadir + Terlambat) / Total Hari
+                Keterangan: Hadir = tepat waktu · Terlambat = masuk tapi terlambat · % Hadir = (Hadir + Terlambat) / Total Hari
               </div>
             </div>
           )}
