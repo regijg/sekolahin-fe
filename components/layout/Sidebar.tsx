@@ -244,6 +244,7 @@ export default function Sidebar() {
                         <Link
                           key={item.href}
                           href={item.href}
+                          prefetch={false}
                           title={isCollapsed ? item.label : undefined}
                           onClick={isMobile ? closeMobile : undefined}
                           className={`flex items-center rounded-lg text-sm transition-colors group relative
