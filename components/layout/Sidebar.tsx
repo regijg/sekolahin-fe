@@ -245,6 +245,7 @@ export default function Sidebar() {
                           key={item.href}
                           href={item.href}
                           prefetch={false}
+                          onMouseEnter={() => router.prefetch(item.href)}
                           title={isCollapsed ? item.label : undefined}
                           onClick={isMobile ? closeMobile : undefined}
                           className={`flex items-center rounded-lg text-sm transition-colors group relative
