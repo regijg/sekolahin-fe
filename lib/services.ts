@@ -1082,7 +1082,11 @@ export const paymentService = {
     const supabase = createClient()
     const { data: row, error } = await supabase.from('payments').insert(data as object).select().single()
     if (error) throw new Error(error.message)
-    return row as Payment
+    const payment = row as Payment
+    if (payment.invoice_id) {
+      await supabase.from('invoices').update({ status: 'lunas' }).eq('id', payment.invoice_id)
+    }
+    return payment
   },
   update: async (id: number, data: unknown) => {
     const supabase = createClient()
