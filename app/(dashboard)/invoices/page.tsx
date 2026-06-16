@@ -49,7 +49,7 @@ function InlinePaymentSection({
             type="date"
             value={date}
             onChange={e => setDate(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
           />
         </div>
         <div>
@@ -57,7 +57,7 @@ function InlinePaymentSection({
           <select
             value={method}
             onChange={e => setMethod(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
           >
             <option value="cash">Tunai</option>
             <option value="transfer">Transfer</option>
@@ -69,7 +69,7 @@ function InlinePaymentSection({
           <NumberInput
             value={amount}
             onChange={(val) => { setUserEdited(true); setAmount(val === '' ? '' : String(val)) }}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
           />
         </div>
       </div>

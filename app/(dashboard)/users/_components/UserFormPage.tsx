@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -83,7 +83,7 @@ export default function UserFormPage({ userId }: Props) {
 
   return (
     <>
-      <Header title={isEdit ? `Edit Pengguna — ${existingUser?.name ?? ''}` : 'Tambah Pengguna'} />
+      <Header title={isEdit ? `Edit Pengguna â€” ${existingUser?.name ?? ''}` : 'Tambah Pengguna'} />
       <main className="flex-1 p-3 sm:p-6 max-w-2xl">
         <button
           onClick={() => router.push('/users')}
@@ -111,7 +111,7 @@ export default function UserFormPage({ userId }: Props) {
                 {...register('name', { required: 'Nama wajib diisi' })}
                 type="text"
                 placeholder="Nama lengkap"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
             </div>
@@ -127,7 +127,7 @@ export default function UserFormPage({ userId }: Props) {
                 })}
                 type="email"
                 placeholder="contoh@email.com"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
             </div>
@@ -144,8 +144,8 @@ export default function UserFormPage({ userId }: Props) {
                     minLength: { value: 8, message: 'Minimal 8 karakter' },
                   })}
                   type={showPassword ? 'text' : 'password'}
-                  placeholder={isEdit ? '••••••••' : 'Minimal 8 karakter'}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={isEdit ? 'â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢' : 'Minimal 8 karakter'}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <button
                   type="button"
@@ -169,9 +169,9 @@ export default function UserFormPage({ userId }: Props) {
               ) : (
                 <select
                   {...register('role_id', { required: 'Role wajib dipilih' })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
                 >
-                  <option value="">— Pilih Role —</option>
+                  <option value="">â€” Pilih Role â€”</option>
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}

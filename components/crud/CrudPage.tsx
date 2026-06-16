@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -214,7 +214,7 @@ export default function CrudPage<T extends { id: number }>({
             placeholder={`Cari ${title.toLowerCase()}...`}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
@@ -309,7 +309,7 @@ export default function CrudPage<T extends { id: number }>({
         {meta && (
           <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
             <span className="text-xs text-gray-400">
-              Total {meta.total} data · Halaman {meta.current_page} dari {meta.last_page}
+              Total {meta.total} data Â· Halaman {meta.current_page} dari {meta.last_page}
             </span>
             {meta.last_page > 1 && (
               <div className="flex items-center gap-1">
@@ -326,7 +326,7 @@ export default function CrudPage<T extends { id: number }>({
                   return (
                     <span key={p} className="flex items-center gap-1">
                       {prev && p - prev > 1 && (
-                        <span className="px-1 text-xs text-gray-400">…</span>
+                        <span className="px-1 text-xs text-gray-400">â€¦</span>
                       )}
                       <button
                         onClick={() => setPage(p)}
@@ -384,11 +384,11 @@ export default function CrudPage<T extends { id: number }>({
                   <select
                     {...register(field.name, { required: field.required ? `${field.label} wajib diisi` : false })}
                     disabled={!!(field.dependsOn && !watchAll[field.dependsOn])}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                   >
                     <option value="">
                       {field.dependsOn && !watchAll[field.dependsOn]
-                        ? `— Pilih ${fields.find((f) => f.name === field.dependsOn)?.label ?? 'filter'} dulu —`
+                        ? `â€” Pilih ${fields.find((f) => f.name === field.dependsOn)?.label ?? 'filter'} dulu â€”`
                         : '-- Pilih --'}
                     </option>
                     {(field.dependsOn && field.filterOptions
@@ -403,7 +403,7 @@ export default function CrudPage<T extends { id: number }>({
                     {...register(field.name, { required: field.required ? `${field.label} wajib diisi` : false })}
                     rows={3}
                     placeholder={field.placeholder}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 ) : field.type === 'boolean' ? (
                   <div className="flex items-center gap-2 mt-1">
@@ -428,7 +428,7 @@ export default function CrudPage<T extends { id: number }>({
                         onChange={cf.onChange}
                         placeholder={field.placeholder}
                         readOnly={field.disabled}
-                        className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                        className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                       />
                     )}
                   />
@@ -440,7 +440,7 @@ export default function CrudPage<T extends { id: number }>({
                     type={field.type}
                     placeholder={field.placeholder}
                     readOnly={field.disabled}
-                    className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                    className={`w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${field.disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
                   />
                 )}
 

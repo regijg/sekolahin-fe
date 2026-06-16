@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -109,7 +109,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
               value={paymentTypeId}
               onChange={e => setPaymentTypeId(e.target.value)}
               required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Pilih jenis pembayaran...</option>
               {paymentTypes.map(p => (
@@ -124,7 +124,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
             <select
               value={year}
               onChange={e => setYear(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -168,7 +168,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
                 onChange={(val) => setAmount(val === '' ? '' : String(val))}
                 required
                 placeholder="300.000"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -177,7 +177,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
                 value={lateFee}
                 onChange={(val) => setLateFee(val === '' ? '' : String(val))}
                 placeholder="0"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -189,7 +189,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
               <select
                 value={classroomId}
                 onChange={e => setClassroomId(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Semua Kelas</option>
                 {classrooms.map(c => (
@@ -203,7 +203,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
                 type="date"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>

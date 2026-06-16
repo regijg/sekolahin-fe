@@ -95,7 +95,7 @@ export default function StudentAttendancePage() {
               <select
                 value={classroomId}
                 onChange={e => { setClassroomId(e.target.value); setLoaded(false) }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Pilih kelas...</option>
                 {classrooms.map(c => (
@@ -109,7 +109,7 @@ export default function StudentAttendancePage() {
                 type="date"
                 value={date}
                 onChange={e => { setDate(e.target.value); setLoaded(false) }}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <button

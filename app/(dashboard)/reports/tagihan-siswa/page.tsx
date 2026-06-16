@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -35,7 +35,7 @@ export default function TagihanSiswaPage() {
       <main className="flex-1 p-3 sm:p-6">
         <ReportWrapper
           title="Laporan Tagihan Siswa"
-          subtitle={selectedStudent ? `${selectedStudent.name} — ${selectedStudent.classroom_name ?? ''}` : undefined}
+          subtitle={selectedStudent ? `${selectedStudent.name} â€” ${selectedStudent.classroom_name ?? ''}` : undefined}
           schoolName={school?.name}
         >
           {/* Filter */}
@@ -44,14 +44,14 @@ export default function TagihanSiswaPage() {
             <select
               value={studentId}
               onChange={e => setStudentId(e.target.value)}
-              className="w-full sm:w-96 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full sm:w-96 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">-- Pilih Siswa --</option>
               {students
                 .slice()
                 .sort((a, b) => (a.classroom_name ?? '').localeCompare(b.classroom_name ?? '') || a.name.localeCompare(b.name))
                 .map(s => (
-                  <option key={s.id} value={s.id}>{s.name} — {s.classroom_name ?? '-'} ({s.nis})</option>
+                  <option key={s.id} value={s.id}>{s.name} â€” {s.classroom_name ?? '-'} ({s.nis})</option>
                 ))}
             </select>
           </div>

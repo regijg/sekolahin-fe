@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -60,7 +60,7 @@ export default function PpdbPage() {
           {/* Filter */}
           <div className="no-print mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <label className="block text-xs font-medium text-gray-600 mb-1">Filter Status</label>
-            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full sm:w-60 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select value={status} onChange={e => setStatus(e.target.value)} className="w-full sm:w-60 border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
               {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>

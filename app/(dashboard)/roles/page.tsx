@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -51,7 +51,7 @@ export default function RolesPage() {
               placeholder="Cari role..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
@@ -145,7 +145,7 @@ export default function RolesPage() {
           {meta && (
             <div className="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
               <span className="text-xs text-gray-400">
-                Total {meta.total} data · Halaman {meta.current_page} dari {meta.last_page}
+                Total {meta.total} data Â· Halaman {meta.current_page} dari {meta.last_page}
               </span>
               {meta.last_page > 1 && (
                 <div className="flex items-center gap-1">
@@ -157,7 +157,7 @@ export default function RolesPage() {
                     .filter((p) => p === 1 || p === meta.last_page || Math.abs(p - meta.current_page) <= 1)
                     .map((p, i, arr) => (
                       <span key={p} className="flex items-center gap-1">
-                        {arr[i - 1] && p - arr[i - 1] > 1 && <span className="px-1 text-xs text-gray-400">…</span>}
+                        {arr[i - 1] && p - arr[i - 1] > 1 && <span className="px-1 text-xs text-gray-400">â€¦</span>}
                         <button onClick={() => setPage(p)}
                           className={`min-w-[32px] h-8 rounded border text-xs font-medium transition-colors ${p === meta.current_page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
                           {p}
@@ -178,7 +178,7 @@ export default function RolesPage() {
         <Modal
           isOpen={!!viewPermTarget}
           onClose={() => setViewPermTarget(null)}
-          title={`Permissions — ${viewPermTarget?.name ?? ''}`}
+          title={`Permissions â€” ${viewPermTarget?.name ?? ''}`}
           size="lg"
         >
           <div className="space-y-3">

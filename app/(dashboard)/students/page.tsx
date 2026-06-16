@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -74,7 +74,7 @@ function InlineGuardianCreate({
                 value={name}
                 onChange={e => { setName(e.target.value); if (nameError) setNameError('') }}
                 placeholder="Nama lengkap wali"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
               {nameError && <p className="text-red-500 text-xs mt-1">{nameError}</p>}
             </div>
@@ -84,7 +84,7 @@ function InlineGuardianCreate({
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 placeholder="08xxxxxxxx"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div className="sm:col-span-2">
@@ -93,7 +93,7 @@ function InlineGuardianCreate({
                 value={address}
                 onChange={e => setAddress(e.target.value)}
                 rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function StudentsPage() {
       await ppdbService.delete(id)
       qc.invalidateQueries({ queryKey: ['ppdb'] })
     } catch {
-      // silently ignore — student already saved
+      // silently ignore â€” student already saved
     }
   }, [selectedPpdbAppId, qc])
 
@@ -196,7 +196,7 @@ export default function StudentsPage() {
           guardianId = guardian.id
           qc.invalidateQueries({ queryKey: ['parent-guardians'] })
         } catch {
-          // guardian creation failed — proceed without pre-selecting guardian
+          // guardian creation failed â€” proceed without pre-selecting guardian
         }
       }
     }
@@ -255,12 +255,12 @@ export default function StudentsPage() {
               >
                 <div className="font-medium text-gray-800 text-sm">{app.name}</div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  {app.registration_number} · {app.gender === 'male' ? 'Laki-laki' : 'Perempuan'}
-                  {app.birthdate ? ` · ${app.birthdate}` : ''}
+                  {app.registration_number} Â· {app.gender === 'male' ? 'Laki-laki' : 'Perempuan'}
+                  {app.birthdate ? ` Â· ${app.birthdate}` : ''}
                 </div>
                 {app.guardian_name && (
                   <div className="text-xs text-blue-600 mt-1">
-                    Wali: {app.guardian_name} ({app.guardian_relation ?? 'wali'}){app.guardian_phone ? ` · ${app.guardian_phone}` : ''}
+                    Wali: {app.guardian_name} ({app.guardian_relation ?? 'wali'}){app.guardian_phone ? ` Â· ${app.guardian_phone}` : ''}
                   </div>
                 )}
               </button>

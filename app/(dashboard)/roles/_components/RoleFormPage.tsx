@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -210,7 +210,7 @@ export default function RoleFormPage({ roleId }: Props) {
 
   return (
     <>
-      <Header title={isEdit ? `Edit Role — ${existingRole?.name ?? ''}` : 'Tambah Role'} />
+      <Header title={isEdit ? `Edit Role â€” ${existingRole?.name ?? ''}` : 'Tambah Role'} />
       <main className="flex-1 p-3 sm:p-6 max-w-5xl">
         <button
           onClick={() => router.push('/roles')}
@@ -239,7 +239,7 @@ export default function RoleFormPage({ roleId }: Props) {
                   {...register('name', { required: 'Nama role wajib diisi' })}
                   type="text"
                   placeholder="contoh: Admin, Guru, Siswa"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
               </div>
@@ -249,7 +249,7 @@ export default function RoleFormPage({ roleId }: Props) {
                   {...register('description')}
                   type="text"
                   placeholder="Deskripsi singkat (opsional)"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>

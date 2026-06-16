@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -51,7 +51,7 @@ export default function InventarisPage() {
           <div className="no-print grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                 <option value="">Semua Kategori</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -59,7 +59,7 @@ export default function InventarisPage() {
             <div className="col-span-2 flex items-end gap-2 flex-wrap">
               {groupedByCategory.map(([cat, { count, qty }]) => (
                 <span key={cat} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full font-medium border border-orange-100">
-                  {cat}: {count} jenis · {qty} unit
+                  {cat}: {count} jenis Â· {qty} unit
                 </span>
               ))}
             </div>

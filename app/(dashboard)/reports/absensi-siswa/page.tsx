@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -57,7 +57,7 @@ export default function AbsensiSiswaPage() {
 
   const classroom = classrooms.find(c => String(c.id) === classroomId)
   const monthLabel = MONTHS.find(m => String(m.value) === month)?.label
-  const subtitle = [classroom?.name, monthLabel, year].filter(Boolean).join(' · ')
+  const subtitle = [classroom?.name, monthLabel, year].filter(Boolean).join(' Â· ')
 
   return (
     <>
@@ -69,20 +69,20 @@ export default function AbsensiSiswaPage() {
           <div className="no-print grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Kelas <span className="text-red-500">*</span></label>
-              <select value={classroomId} onChange={e => setClassroomId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={classroomId} onChange={e => setClassroomId(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                 <option value="">Pilih kelas...</option>
                 {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Bulan</label>
-              <select value={month} onChange={e => setMonth(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={month} onChange={e => setMonth(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                 {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Tahun</label>
-              <select value={year} onChange={e => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={year} onChange={e => setYear(e.target.value)} className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
                 {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
             </div>
@@ -140,7 +140,7 @@ export default function AbsensiSiswaPage() {
                 </table>
               </div>
               <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
-                Keterangan: Hadir = tepat waktu · Terlambat = masuk tapi terlambat · % Hadir = (Hadir + Terlambat) / Total Hari
+                Keterangan: Hadir = tepat waktu Â· Terlambat = masuk tapi terlambat Â· % Hadir = (Hadir + Terlambat) / Total Hari
               </div>
             </div>
           )}
