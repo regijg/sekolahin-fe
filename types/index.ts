@@ -255,13 +255,14 @@ export interface Letter {
   updated_at?: string
 }
 
-// Payment Type — DB: school_id, code, name, description (no amount)
+// Payment Type — DB: school_id, code, name, description, is_periodic (no amount)
 export interface PaymentType {
   id: number
   school_id: number
   code: string
   name: string
   description?: string
+  is_periodic?: boolean
   created_at?: string
   updated_at?: string
 }

@@ -232,6 +232,7 @@ CREATE TABLE IF NOT EXISTS public.payment_types (
   code        TEXT NOT NULL,
   name        TEXT NOT NULL,
   description TEXT,
+  is_periodic BOOLEAN NOT NULL DEFAULT TRUE,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );

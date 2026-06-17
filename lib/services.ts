@@ -1047,6 +1047,51 @@ export const invoiceService = {
       page
     )
   },
+  getAllFiltered: async (page = 1, filters: {
+    status?: string
+    payment_type_id?: number
+    classroom_id?: number
+    year?: number
+    month?: number
+  } = {}) => {
+    const supabase = createClient()
+    const { from, to } = pageRange(page)
+
+    let studentIds: number[] | null = null
+    if (filters.classroom_id) {
+      const { data: cls } = await supabase
+        .from('students').select('id').eq('classroom_id', filters.classroom_id)
+      studentIds = (cls ?? []).map((s: { id: number }) => s.id)
+      if (studentIds.length === 0) return buildPaginated<Invoice>([], 0, page)
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = supabase
+      .from('invoices')
+      .select('*, students(name, nis), payment_types(name)', { count: 'exact' })
+      .eq('school_id', getSchoolId()!)
+      .order('id', { ascending: false })
+
+    if (filters.status) q = q.eq('status', filters.status)
+    if (filters.payment_type_id) q = q.eq('payment_type_id', filters.payment_type_id)
+    if (filters.year) q = q.eq('year', filters.year)
+    if (filters.month) q = q.eq('month', filters.month)
+    if (studentIds) q = q.in('student_id', studentIds)
+
+    const { data, count, error } = await q.range(from, to)
+    if (error) throw new Error(error.message)
+    return buildPaginated<Invoice>(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (data as any[])?.map(r => ({
+        ...r,
+        student_name: (r.students as { name: string; nis: string } | null)?.name,
+        student_nis: (r.students as { name: string; nis: string } | null)?.nis,
+        payment_type_name: (r.payment_types as { name: string } | null)?.name,
+      })),
+      count,
+      page
+    )
+  },
   getById: async (id: number) => {
     const supabase = createClient()
     const { data, error } = await supabase
@@ -1092,6 +1137,10 @@ export const invoiceService = {
       classroom_id?: number | null
     }
 
+    const { data: paymentType } = await supabase
+      .from('payment_types').select('is_periodic').eq('id', payment_type_id).single()
+    const isPeriodic = paymentType ? (paymentType.is_periodic !== false) : true
+
     let studentsQuery = supabase.from('students').select('id').eq('school_id', school_id)
     if (classroom_id) studentsQuery = studentsQuery.eq('classroom_id', classroom_id)
     const { data: students } = await studentsQuery
@@ -1100,34 +1149,66 @@ export const invoiceService = {
     let totalCreated = 0
     let totalSkipped = 0
 
-    for (const month of months) {
+    if (!isPeriodic) {
+      // Satu kali seumur hidup — de-dup by student + payment_type saja (tanpa year/month)
+      const startMonth = months[0]
+
       const { data: existing } = await supabase
         .from('invoices').select('student_id')
         .eq('school_id', school_id)
         .eq('payment_type_id', payment_type_id)
-        .eq('month', month)
-        .eq('year', year)
 
       const existingIds = new Set((existing ?? []).map((e: { student_id: number }) => e.student_id))
       const newStudentIds = studentIds.filter((id: number) => !existingIds.has(id))
-      totalSkipped += existingIds.size
+      totalSkipped = existingIds.size
 
       if (newStudentIds.length > 0) {
-        const { error } = await supabase.from('invoices').insert(
-          newStudentIds.map((id: number) => ({
-            school_id,
-            student_id: id,
-            payment_type_id,
-            month,
-            year,
-            amount,
-            late_fee: late_fee ?? 0,
-            due_date: due_date ?? null,
-            status: 'belum_lunas',
-          }))
-        )
+        const rows = newStudentIds.map((id: number) => ({
+          school_id,
+          student_id: id,
+          payment_type_id,
+          month: startMonth,
+          year,
+          amount,
+          late_fee: late_fee ?? 0,
+          due_date: due_date ?? null,
+          status: 'belum_lunas',
+        }))
+
+        const { error } = await supabase.from('invoices').insert(rows)
         if (error) throw new Error(error.message)
-        totalCreated += newStudentIds.length
+        totalCreated = newStudentIds.length
+      }
+    } else {
+      for (const month of months) {
+        const { data: existing } = await supabase
+          .from('invoices').select('student_id')
+          .eq('school_id', school_id)
+          .eq('payment_type_id', payment_type_id)
+          .eq('month', month)
+          .eq('year', year)
+
+        const existingIds = new Set((existing ?? []).map((e: { student_id: number }) => e.student_id))
+        const newStudentIds = studentIds.filter((id: number) => !existingIds.has(id))
+        totalSkipped += existingIds.size
+
+        if (newStudentIds.length > 0) {
+          const { error } = await supabase.from('invoices').insert(
+            newStudentIds.map((id: number) => ({
+              school_id,
+              student_id: id,
+              payment_type_id,
+              month,
+              year,
+              amount,
+              late_fee: late_fee ?? 0,
+              due_date: due_date ?? null,
+              status: 'belum_lunas',
+            }))
+          )
+          if (error) throw new Error(error.message)
+          totalCreated += newStudentIds.length
+        }
       }
     }
 
@@ -1182,7 +1263,14 @@ export const paymentService = {
     if (error) throw new Error(error.message)
     const payment = row as Payment
     if (payment.invoice_id) {
-      await supabase.from('invoices').update({ status: 'lunas' }).eq('id', payment.invoice_id)
+      const [{ data: invoice }, { data: allPayments }] = await Promise.all([
+        supabase.from('invoices').select('amount, late_fee').eq('id', payment.invoice_id).single(),
+        supabase.from('payments').select('amount').eq('invoice_id', payment.invoice_id),
+      ])
+      const totalDue = Number(invoice?.amount ?? 0) + Number(invoice?.late_fee ?? 0)
+      const totalPaid = (allPayments ?? []).reduce((sum, p) => sum + Number(p.amount), 0)
+      const newStatus = totalPaid >= totalDue ? 'lunas' : 'cicilan'
+      await supabase.from('invoices').update({ status: newStatus }).eq('id', payment.invoice_id)
     }
     return payment
   },

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -16,6 +16,7 @@ const MONTHS = [
 ]
 
 const currentYear = new Date().getFullYear()
+const currentMonth = new Date().getMonth() + 1
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i)
 
 interface Props {
@@ -37,11 +38,15 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
   const [paymentTypeId, setPaymentTypeId] = useState('')
   const [year, setYear] = useState(String(currentYear))
   const [selectedMonths, setSelectedMonths] = useState<number[]>([])
+  const [singleMonth, setSingleMonth] = useState(String(currentMonth))
   const [amount, setAmount] = useState('')
   const [lateFee, setLateFee] = useState('')
   const [dueDate, setDueDate] = useState('')
   const [classroomId, setClassroomId] = useState('')
   const [result, setResult] = useState<Result | null>(null)
+
+  const selectedPaymentType = paymentTypes.find(p => String(p.id) === paymentTypeId)
+  const isPeriodic = selectedPaymentType ? (selectedPaymentType.is_periodic !== false) : true
 
   const toggleMonth = (m: number) =>
     setSelectedMonths(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
@@ -49,16 +54,23 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
   const toggleAll = () =>
     setSelectedMonths(prev => prev.length === 12 ? [] : MONTHS.map(m => m.value))
 
+  const handlePaymentTypeChange = (val: string) => {
+    setPaymentTypeId(val)
+    setSelectedMonths([])
+    setSingleMonth(String(currentMonth))
+  }
+
   const mutation = useMutation({
     mutationFn: () => invoiceService.bulkGenerate({
       school_id: schoolId,
       payment_type_id: Number(paymentTypeId),
-      months: selectedMonths,
+      months: isPeriodic ? selectedMonths : [Number(singleMonth)],
       year: Number(year),
       amount: Number(amount),
       late_fee: lateFee ? Number(lateFee) : 0,
       due_date: dueDate || null,
       classroom_id: classroomId ? Number(classroomId) : null,
+      cicilan_count: 1,
     }),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['invoices'] })
@@ -70,6 +82,7 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
     setResult(null)
     setPaymentTypeId('')
     setSelectedMonths([])
+    setSingleMonth(String(currentMonth))
     setAmount('')
     setLateFee('')
     setDueDate('')
@@ -77,7 +90,10 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
     onClose()
   }
 
-  const canSubmit = paymentTypeId && selectedMonths.length > 0 && amount && !mutation.isPending
+  const canSubmit = paymentTypeId
+    && (isPeriodic ? selectedMonths.length > 0 : !!singleMonth)
+    && amount
+    && !mutation.isPending
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Generate Tagihan Massal" size="lg">
@@ -85,7 +101,9 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
         <div className="space-y-4">
           <div className="rounded-lg bg-green-50 border border-green-200 p-5 text-center space-y-3">
             <div className="text-4xl font-bold text-green-600">{result.created}</div>
-            <div className="text-sm text-green-700 font-medium">Tagihan berhasil dibuat</div>
+            <div className="text-sm text-green-700 font-medium">
+              Siswa mendapat tagihan baru
+            </div>
             <div className="flex justify-center gap-6 text-sm text-gray-600 pt-2">
               <span>{result.total_students} siswa diproses</span>
               <span className="text-yellow-600">{result.skipped} dilewati (sudah ada)</span>
@@ -106,7 +124,20 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
           {/* Jenis Pembayaran */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Pembayaran <span className="text-red-500">*</span></label>
-            <SearchableSelect value={paymentTypeId} onChange={setPaymentTypeId} placeholder="Pilih jenis pembayaran..." options={paymentTypes.map(p => ({ value: p.id, label: p.name }))} />
+            <SearchableSelect
+              value={paymentTypeId}
+              onChange={handlePaymentTypeChange}
+              placeholder="Pilih jenis pembayaran..."
+              options={paymentTypes.map(p => ({
+                value: p.id,
+                label: p.is_periodic !== false ? p.name : `${p.name} · Satu Kali`,
+              }))}
+            />
+            {selectedPaymentType && !isPeriodic && (
+              <p className="text-xs text-purple-600 mt-1">
+                Pembayaran satu kali — siswa yang sudah pernah bayar ini akan otomatis dilewati.
+              </p>
+            )}
           </div>
 
           {/* Tahun */}
@@ -115,34 +146,47 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
             <SearchableSelect value={year} onChange={setYear} isClearable={false} options={YEARS.map(y => ({ value: y, label: String(y) }))} />
           </div>
 
-          {/* Bulan */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">Bulan <span className="text-red-500">*</span></label>
-              <button type="button" onClick={toggleAll} className="text-xs text-blue-600 hover:underline">
-                {selectedMonths.length === 12 ? 'Batal Semua' : 'Pilih Semua'}
-              </button>
-            </div>
-            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-              {MONTHS.map(m => (
-                <button
-                  key={m.value}
-                  type="button"
-                  onClick={() => toggleMonth(m.value)}
-                  className={`py-1.5 text-xs rounded-lg border font-medium transition-colors ${
-                    selectedMonths.includes(m.value)
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
-                  }`}
-                >
-                  {m.label}
+          {/* Bulan — conditional based on is_periodic */}
+          {isPeriodic ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">Bulan <span className="text-red-500">*</span></label>
+                <button type="button" onClick={toggleAll} className="text-xs text-blue-600 hover:underline">
+                  {selectedMonths.length === 12 ? 'Batal Semua' : 'Pilih Semua'}
                 </button>
-              ))}
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                {MONTHS.map(m => (
+                  <button
+                    key={m.value}
+                    type="button"
+                    onClick={() => toggleMonth(m.value)}
+                    className={`py-1.5 text-xs rounded-lg border font-medium transition-colors ${
+                      selectedMonths.includes(m.value)
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              {selectedMonths.length > 0 && (
+                <p className="text-xs text-blue-600 mt-1">{selectedMonths.length} bulan dipilih</p>
+              )}
             </div>
-            {selectedMonths.length > 0 && (
-              <p className="text-xs text-blue-600 mt-1">{selectedMonths.length} bulan dipilih</p>
-            )}
-          </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Bulan Tagihan <span className="text-red-500">*</span></label>
+              <SearchableSelect
+                value={singleMonth}
+                onChange={setSingleMonth}
+                isClearable={false}
+                options={MONTHS.map(m => ({ value: m.value, label: m.label }))}
+              />
+              <p className="text-xs text-gray-500 mt-1">Bulan pencatatan tagihan — biasanya awal tahun ajaran (Juli).</p>
+            </div>
+          )}
 
           {/* Nominal */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -205,7 +249,9 @@ export default function BulkGenerateModal({ isOpen, onClose, schoolId, paymentTy
             >
               {mutation.isPending
                 ? 'Membuat tagihan...'
-                : `Generate ${selectedMonths.length > 0 ? `(${selectedMonths.length} bulan)` : ''}`}
+                : isPeriodic
+                  ? `Generate ${selectedMonths.length > 0 ? `(${selectedMonths.length} bulan)` : ''}`
+                  : 'Generate'}
             </button>
           </div>
         </form>

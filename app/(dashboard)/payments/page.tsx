@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
@@ -16,6 +16,15 @@ export default function PaymentsPage() {
   const { data: invoices = [] } = useQuery({ queryKey: ['invoices', 'all'], queryFn: () => fetchAllPages(invoiceService) })
   const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
   const { data: students = [] } = useQuery({ queryKey: ['students', 'all'], queryFn: () => fetchAllPages(studentService) })
+  const { data: allPayments = [] } = useQuery({ queryKey: ['payments', 'all'], queryFn: () => fetchAllPages(paymentService) })
+
+  const paidByInvoice = useMemo(() => {
+    const map: Record<number, number> = {}
+    allPayments.forEach(p => {
+      if (p.invoice_id) map[p.invoice_id] = (map[p.invoice_id] ?? 0) + Number(p.amount)
+    })
+    return map
+  }, [allPayments])
 
   const fields: FieldConfig[] = useMemo(() => [
     {
@@ -37,18 +46,24 @@ export default function PaymentsPage() {
       dependsOn: 'classroom_filter',
       filterOptions: (classroomId) => {
         if (!classroomId) return []
-        const activeInvoices = invoices.filter(
+        const unpaidInvoices = invoices.filter(
           (inv) => (inv as unknown as { status: string }).status !== 'lunas'
         )
         const studentIds = students
           .filter(s => String(s.classroom_id) === String(classroomId))
           .map(s => s.id)
-        return activeInvoices
+        return unpaidInvoices
           .filter(inv => studentIds.includes(inv.student_id!))
-          .map(inv => ({
-            value: inv.id,
-            label: `${inv.student_name ?? ''} — ${inv.payment_type_name ?? ''} ${inv.month}/${inv.year} (${formatCurrency(inv.amount)})`,
-          }))
+          .map(inv => {
+            const totalDue = Number(inv.amount) + Number(inv.late_fee ?? 0)
+            const paid = paidByInvoice[inv.id] ?? 0
+            const remaining = totalDue - paid
+            const status = paid > 0 ? `cicilan · sisa ${formatCurrency(remaining)}` : formatCurrency(totalDue)
+            return {
+              value: inv.id,
+              label: `${inv.student_name ?? ''} — ${inv.payment_type_name ?? ''} ${inv.month}/${inv.year} (${status})`,
+            }
+          })
       },
       options: invoices.map(inv => ({ value: inv.id, label: `${inv.student_name ?? ''} #${inv.id}` })),
     },
@@ -80,7 +95,7 @@ export default function PaymentsPage() {
         { value: 'qris', label: 'QRIS' },
       ],
     },
-  ], [invoices, classrooms, students])
+  ], [invoices, classrooms, students, paidByInvoice])
 
   const hiddenValues = schoolId ? { school_id: schoolId } : {}
 

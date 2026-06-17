@@ -2,16 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Zap } from 'lucide-react'
+import { Plus, Zap, SlidersHorizontal, X } from 'lucide-react'
 import CrudPage from '@/components/crud/CrudPage'
 import Header from '@/components/layout/Header'
 import BulkGenerateModal from './BulkGenerateModal'
+import AddInvoiceModal from './AddInvoiceModal'
 import { invoiceService, paymentService, studentService, paymentTypeService, classroomService, fetchAllPages } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import type { FieldConfig, Invoice } from '@/types'
 import { formatCurrency } from '@/lib/utils'
 import NumberInput from '@/components/ui/NumberInput'
 import SearchableSelect from '@/components/ui/SearchableSelect'
+
+const MONTHS_OPT = [
+  { value: 1, label: 'Januari' }, { value: 2, label: 'Februari' }, { value: 3, label: 'Maret' },
+  { value: 4, label: 'April' }, { value: 5, label: 'Mei' }, { value: 6, label: 'Juni' },
+  { value: 7, label: 'Juli' }, { value: 8, label: 'Agustus' }, { value: 9, label: 'September' },
+  { value: 10, label: 'Oktober' }, { value: 11, label: 'November' }, { value: 12, label: 'Desember' },
+]
+const _currentYear = new Date().getFullYear()
+const YEAR_OPTS = Array.from({ length: 5 }, (_, i) => ({ value: _currentYear - 1 + i, label: String(_currentYear - 1 + i) }))
 
 type PaymentDetails = { date: string; method: string; amount: string }
 
@@ -89,7 +99,39 @@ export default function InvoicesPage() {
   const schoolId = useSchoolId()
   const qc = useQueryClient()
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
   const pendingPaymentRef = useRef<PaymentDetails | null>(null)
+
+  // Filters
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterPaymentTypeId, setFilterPaymentTypeId] = useState('')
+  const [filterClassroomId, setFilterClassroomId] = useState('')
+  const [filterYear, setFilterYear] = useState('')
+  const [filterMonth, setFilterMonth] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+
+  const activeFilterCount = [filterStatus, filterPaymentTypeId, filterClassroomId, filterYear, filterMonth].filter(Boolean).length
+
+  const resetFilters = () => {
+    setFilterStatus('')
+    setFilterPaymentTypeId('')
+    setFilterClassroomId('')
+    setFilterYear('')
+    setFilterMonth('')
+  }
+
+  const filteredService = useMemo(() => ({
+    ...invoiceService,
+    getAll: (page = 1) => invoiceService.getAllFiltered(page, {
+      status: filterStatus || undefined,
+      payment_type_id: filterPaymentTypeId ? Number(filterPaymentTypeId) : undefined,
+      classroom_id: filterClassroomId ? Number(filterClassroomId) : undefined,
+      year: filterYear ? Number(filterYear) : undefined,
+      month: filterMonth ? Number(filterMonth) : undefined,
+    }),
+  }), [filterStatus, filterPaymentTypeId, filterClassroomId, filterYear, filterMonth])
+
+  const filterKey = `${filterStatus}|${filterPaymentTypeId}|${filterClassroomId}|${filterYear}|${filterMonth}`
 
   const { data: students = [] } = useQuery({ queryKey: ['students', 'all'], queryFn: () => fetchAllPages(studentService) })
   const { data: paymentTypes = [] } = useQuery({ queryKey: ['payment-types', 'all'], queryFn: () => fetchAllPages(paymentTypeService) })
@@ -165,25 +207,112 @@ export default function InvoicesPage() {
     <>
       <Header title="Tagihan" />
       <main className="flex-1 p-3 sm:p-6">
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={() => setBulkOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors w-full sm:w-auto justify-center"
-          >
-            <Zap size={16} />
-            Generate Massal
-          </button>
+
+        {/* Filter panel */}
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => setShowFilters(v => !v)}
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors ${showFilters ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+            >
+              <SlidersHorizontal size={14} />
+              Filter
+              {activeFilterCount > 0 && (
+                <span className="bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            {activeFilterCount > 0 && (
+              <button onClick={resetFilters} className="flex items-center gap-1 text-xs text-red-500 hover:underline">
+                <X size={12} /> Reset filter
+              </button>
+            )}
+          </div>
+
+          {showFilters && (
+            <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                <SearchableSelect
+                  value={filterStatus}
+                  onChange={setFilterStatus}
+                  placeholder="Semua Status"
+                  options={[
+                    { value: 'belum_lunas', label: 'Belum Lunas' },
+                    { value: 'cicilan', label: 'Cicilan' },
+                    { value: 'lunas', label: 'Lunas' },
+                  ]}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Jenis Pembayaran</label>
+                <SearchableSelect
+                  value={filterPaymentTypeId}
+                  onChange={setFilterPaymentTypeId}
+                  placeholder="Semua Jenis"
+                  options={paymentTypes.map(p => ({ value: p.id, label: p.name }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Kelas</label>
+                <SearchableSelect
+                  value={filterClassroomId}
+                  onChange={setFilterClassroomId}
+                  placeholder="Semua Kelas"
+                  options={classrooms.slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => ({ value: c.id, label: c.name }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Tahun</label>
+                <SearchableSelect
+                  value={filterYear}
+                  onChange={setFilterYear}
+                  placeholder="Semua Tahun"
+                  options={YEAR_OPTS}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Bulan</label>
+                <SearchableSelect
+                  value={filterMonth}
+                  onChange={setFilterMonth}
+                  placeholder="Semua Bulan"
+                  options={MONTHS_OPT}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <CrudPage
+          key={filterKey}
           title="Tagihan"
           queryKey="invoices"
-          service={invoiceService}
+          service={filteredService}
           fields={fields}
           hiddenValues={hiddenValues}
-          filterFn={(inv) => (inv as unknown as { status: string }).status !== 'lunas'}
+          hideAddButton
+          extraActions={
+            <>
+              <button
+                onClick={() => setBulkOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors"
+              >
+                <Zap size={16} />
+                <span className="hidden sm:inline">Generate Massal</span>
+                <span className="sm:hidden">Massal</span>
+              </button>
+              <button
+                onClick={() => setAddOpen(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
+              >
+                <Plus size={16} />
+                Tambah
+              </button>
+            </>
+          }
           extraFormContent={invoiceExtraContent}
-          onCreateSuccess={handleAfterSave}
           onUpdateSuccess={handleAfterSave}
         />
 
@@ -194,6 +323,17 @@ export default function InvoicesPage() {
             schoolId={schoolId}
             paymentTypes={paymentTypes}
             classrooms={classrooms}
+          />
+        )}
+
+        {schoolId && (
+          <AddInvoiceModal
+            isOpen={addOpen}
+            onClose={() => setAddOpen(false)}
+            schoolId={schoolId}
+            paymentTypes={paymentTypes}
+            classrooms={classrooms}
+            students={students}
           />
         )}
       </main>

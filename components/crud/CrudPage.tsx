@@ -26,6 +26,7 @@ interface CrudPageProps<T extends { id: number }> {
   hiddenValues?: Record<string, unknown>
   filterFn?: (item: T) => boolean
   disableDelete?: boolean
+  hideAddButton?: boolean
   extraActions?: React.ReactNode
   prefillValues?: Record<string, unknown> | null
   onPrefillConsumed?: () => void
@@ -61,6 +62,7 @@ export default function CrudPage<T extends { id: number }>({
   hiddenValues = {},
   filterFn,
   disableDelete = false,
+  hideAddButton = false,
   extraActions,
   prefillValues,
   onPrefillConsumed,
@@ -227,13 +229,15 @@ export default function CrudPage<T extends { id: number }>({
             <RefreshCw size={14} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
-          <button
-            onClick={() => openCreate()}
-            className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-          >
-            <Plus size={16} />
-            Tambah
-          </button>
+          {!hideAddButton && (
+            <button
+              onClick={() => openCreate()}
+              className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              <Plus size={16} />
+              Tambah
+            </button>
+          )}
         </div>
       </div>
 
