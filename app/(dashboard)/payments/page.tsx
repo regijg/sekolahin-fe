@@ -1,9 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { Layers } from 'lucide-react'
 import CrudPage from '@/components/crud/CrudPage'
 import Header from '@/components/layout/Header'
+import BulkPaymentModal from './BulkPaymentModal'
 import { paymentService, invoiceService, classroomService, studentService, fetchAllPages } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import type { FieldConfig } from '@/types'
@@ -13,6 +15,7 @@ const todayStr = () => new Date().toISOString().split('T')[0]
 
 export default function PaymentsPage() {
   const schoolId = useSchoolId()
+  const [bulkOpen, setBulkOpen] = useState(false)
   const { data: invoices = [] } = useQuery({ queryKey: ['invoices', 'all'], queryFn: () => fetchAllPages(invoiceService) })
   const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
   const { data: students = [] } = useQuery({ queryKey: ['students', 'all'], queryFn: () => fetchAllPages(studentService) })
@@ -110,7 +113,30 @@ export default function PaymentsPage() {
           fields={fields}
           hiddenValues={hiddenValues}
           disableDelete
+          hideAddButton
+          extraActions={
+            <button
+              onClick={() => setBulkOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium transition-colors"
+            >
+              <Layers size={16} />
+              <span className="hidden sm:inline">Bayar Multi-Tagihan</span>
+              <span className="sm:hidden">Multi-Tagihan</span>
+            </button>
+          }
         />
+
+        {schoolId && (
+          <BulkPaymentModal
+            isOpen={bulkOpen}
+            onClose={() => setBulkOpen(false)}
+            schoolId={schoolId}
+            students={students}
+            classrooms={classrooms}
+            invoices={invoices}
+            paidByInvoice={paidByInvoice}
+          />
+        )}
       </main>
     </>
   )
