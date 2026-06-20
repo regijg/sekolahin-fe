@@ -136,7 +136,7 @@ export default function AddInvoiceModal({ isOpen, onClose, schoolId, paymentType
             <SearchableSelect
               value={studentId}
               onChange={setStudentId}
-              placeholder={classroomId ? 'Pilih siswa...' : 'Pilih kelas dulu atau ketik nama'}
+              placeholder={classroomId ? 'Pilih siswa...' : 'Pilih kelas dulu'}
               options={filteredStudents.slice().sort((a, b) => a.name.localeCompare(b.name)).map(s => ({ value: s.id, label: `${s.name} (${s.nis})` }))}
             />
           </div>

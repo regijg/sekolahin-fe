@@ -11,6 +11,13 @@ import { useSchoolId } from '@/hooks/useSchoolId'
 import type { Enrollment, AcademicYear } from '@/types'
 import { Plus, Pencil, Trash2, RefreshCw, AlertCircle, ArrowUpCircle } from 'lucide-react'
 
+// Parse "Kelas 7A" / "7A" / "7 A" → { grade: 7, letter: 'A' }
+function parseClassroom(name: string): { grade: number | null; letter: string } {
+  const m = name.match(/(\d+)\s*([A-Za-z])\b/)
+  if (!m) return { grade: null, letter: '' }
+  return { grade: Number(m[1]), letter: m[2].toUpperCase() }
+}
+
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Aktif' },
   { value: 'graduated', label: 'Lulus' },
@@ -148,6 +155,19 @@ export default function EnrollmentsPage() {
     [enrollments]
   )
 
+  // Classrooms with no next-grade class in the system (e.g. kelas 9 di SMP)
+  const terminalClassroomIds = useMemo(() => {
+    return new Set(
+      classrooms
+        .filter(c => {
+          const { grade } = parseClassroom(c.name)
+          if (grade === null) return false
+          return !classrooms.some(other => parseClassroom(other.name).grade === grade + 1)
+        })
+        .map(c => c.id)
+    )
+  }, [classrooms])
+
   const sourceClassrooms = useMemo(() => {
     const seen = new Set<number>()
     return activeEnrollments.reduce<Array<{ id: number; name: string; count: number }>>((acc, e) => {
@@ -161,7 +181,18 @@ export default function EnrollmentsPage() {
   }, [activeEnrollments])
 
   const openPromote = () => {
-    setPromoteClassroomMap({})
+    // Auto-fill: kelas asal 7A → kelas tujuan 8A (grade+1, huruf sama)
+    const autoMap: Record<number, string> = {}
+    sourceClassrooms.forEach(src => {
+      const { grade, letter } = parseClassroom(src.name)
+      if (grade === null) return
+      const match = classrooms.find(c => {
+        const p = parseClassroom(c.name)
+        return p.grade === grade + 1 && p.letter === letter
+      })
+      if (match) autoMap[src.id] = String(match.id)
+    })
+    setPromoteClassroomMap(autoMap)
     setPromoteYearId('')
     setFormError('')
     setPromoteOpen(true)
@@ -172,8 +203,13 @@ export default function EnrollmentsPage() {
     const assignments = activeEnrollments
       .filter(e => !!promoteClassroomMap[e.classroom_id])
       .map(e => ({ student_id: e.student_id, new_classroom_id: Number(promoteClassroomMap[e.classroom_id]) }))
-    if (assignments.length === 0) { setFormError('Tentukan minimal satu kelas tujuan'); return }
-    promoteMutation.mutate({ school_id: schoolId!, to_academic_year_id: Number(promoteYearId), assignments })
+    const graduates = activeEnrollments
+      .filter(e => terminalClassroomIds.has(e.classroom_id))
+      .map(e => ({ student_id: e.student_id, classroom_id: e.classroom_id }))
+    if (assignments.length === 0 && graduates.length === 0) {
+      setFormError('Tentukan minimal satu kelas tujuan'); return
+    }
+    promoteMutation.mutate({ school_id: schoolId!, to_academic_year_id: Number(promoteYearId), assignments, graduates })
   }
 
   const currentYearName = academicYears.find(y => String(y.id) === effectiveYearId)?.name
@@ -379,12 +415,25 @@ export default function EnrollmentsPage() {
                           <p className="text-xs text-gray-400">{src.count} siswa</p>
                         </div>
                         <span className="text-gray-300 text-center">→</span>
-                        <SearchableSelect
-                          value={promoteClassroomMap[src.id] ?? ''}
-                          onChange={v => setPromoteClassroomMap(prev => ({ ...prev, [src.id]: v }))}
-                          placeholder="Pilih kelas..."
-                          options={classrooms.map(c => ({ value: c.id, label: c.name }))}
-                        />
+                        {terminalClassroomIds.has(src.id) ? (
+                          <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+                            <span className="text-xs font-semibold text-green-700">Lulus</span>
+                            <span className="text-xs text-green-500">{src.count} siswa akan diluluskan</span>
+                          </div>
+                        ) : (
+                          <SearchableSelect
+                            value={promoteClassroomMap[src.id] ?? ''}
+                            onChange={v => setPromoteClassroomMap(prev => ({ ...prev, [src.id]: v }))}
+                            placeholder="Pilih kelas..."
+                            options={(() => {
+                              const { grade } = parseClassroom(src.name)
+                              const nextGradeOptions = grade !== null
+                                ? classrooms.filter(c => parseClassroom(c.name).grade === grade + 1)
+                                : classrooms
+                              return nextGradeOptions.map(c => ({ value: c.id, label: c.name }))
+                            })()}
+                          />
+                        )}
                       </div>
                     ))}
                   </div>
@@ -396,9 +445,14 @@ export default function EnrollmentsPage() {
               <button onClick={() => setPromoteOpen(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Batal</button>
               <button onClick={onPromote} disabled={promoteMutation.isPending || !promoteYearId || sourceClassrooms.length === 0}
                 className="px-5 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50">
-                {promoteMutation.isPending
-                  ? 'Memproses...'
-                  : `Naik Kelas ${activeEnrollments.filter(e => !!promoteClassroomMap[e.classroom_id]).length} Siswa`}
+                {promoteMutation.isPending ? 'Memproses...' : (() => {
+                  const naik = activeEnrollments.filter(e => !!promoteClassroomMap[e.classroom_id]).length
+                  const lulus = activeEnrollments.filter(e => terminalClassroomIds.has(e.classroom_id)).length
+                  const parts = []
+                  if (naik > 0) parts.push(`Naik Kelas ${naik}`)
+                  if (lulus > 0) parts.push(`Lulus ${lulus}`)
+                  return parts.length ? `Proses: ${parts.join(' · ')} Siswa` : 'Proses'
+                })()}
               </button>
             </div>
           </div>

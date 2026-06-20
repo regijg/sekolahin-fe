@@ -26,7 +26,11 @@ export default function AbsensiSiswaPage() {
   const { data: school } = useQuery({ queryKey: ['school', schoolId], queryFn: () => schoolService.getById(schoolId!), enabled: !!schoolId })
   const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
   const { data: students = [] } = useQuery({ queryKey: ['students', 'all'], queryFn: () => fetchAllPages(studentService) })
-  const { data: attendances = [], isLoading } = useQuery({ queryKey: ['student-attendances', 'all-report'], queryFn: () => fetchAllPages(studentAttendanceService) })
+  const { data: attendances = [], isLoading } = useQuery({
+    queryKey: ['student-attendances', 'report', month, year],
+    queryFn: () => studentAttendanceService.getByMonth(Number(month), Number(year)),
+    enabled: !!schoolId,
+  })
 
   const studentsInClass = useMemo(() =>
     classroomId ? students.filter(s => String(s.classroom_id) === classroomId) : []
@@ -36,14 +40,8 @@ export default function AbsensiSiswaPage() {
 
   const filtered = useMemo(() => {
     if (!classroomId) return []
-    return attendances.filter(a => {
-      if (!studentIdSet.has(a.student_id)) return false
-      const d = new Date(a.date)
-      if (String(d.getMonth() + 1) !== month) return false
-      if (String(d.getFullYear()) !== year) return false
-      return true
-    })
-  }, [attendances, studentIdSet, classroomId, month, year])
+    return attendances.filter(a => studentIdSet.has(a.student_id))
+  }, [attendances, studentIdSet, classroomId])
 
   const rows = useMemo(() => {
     return studentsInClass.map(s => {

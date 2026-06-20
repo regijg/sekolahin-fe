@@ -315,18 +315,32 @@ export const enrollmentService = {
     const { error } = await supabase.from('enrollments').delete().eq('id', id)
     if (error) throw new Error(error.message)
   },
-  promote: async (payload: { school_id: number; to_academic_year_id: number; assignments: Array<{ student_id: number; new_classroom_id: number }> }) => {
+  promote: async (payload: {
+    school_id: number
+    to_academic_year_id: number
+    assignments: Array<{ student_id: number; new_classroom_id: number }>
+    graduates?: Array<{ student_id: number; classroom_id: number }>
+  }) => {
     const supabase = createClient()
-    const rows = payload.assignments.map(a => ({
-      school_id: payload.school_id,
-      student_id: a.student_id,
-      classroom_id: a.new_classroom_id,
-      academic_year_id: payload.to_academic_year_id,
-      status: 'active',
-    }))
+    const rows = [
+      ...payload.assignments.map(a => ({
+        school_id: payload.school_id,
+        student_id: a.student_id,
+        classroom_id: a.new_classroom_id,
+        academic_year_id: payload.to_academic_year_id,
+        status: 'active',
+      })),
+      ...(payload.graduates ?? []).map(g => ({
+        school_id: payload.school_id,
+        student_id: g.student_id,
+        classroom_id: g.classroom_id,
+        academic_year_id: payload.to_academic_year_id,
+        status: 'graduated',
+      })),
+    ]
     const { error } = await supabase.from('enrollments').upsert(rows, { onConflict: 'student_id,academic_year_id' })
     if (error) throw new Error(error.message)
-    return { promoted: payload.assignments.length }
+    return { promoted: payload.assignments.length, graduated: payload.graduates?.length ?? 0 }
   },
 }
 
@@ -703,6 +717,7 @@ export const studentAttendanceService = {
       .select('*, students(name, nis)', { count: 'exact' })
       .eq('school_id', getSchoolId()!)
       .order('date', { ascending: false })
+      .order('id', { ascending: true })
       .range(from, to)
     if (error) throw new Error(error.message)
     return buildPaginated<StudentAttendance>(
@@ -714,6 +729,28 @@ export const studentAttendanceService = {
       count,
       page
     )
+  },
+  getByMonth: async (month: number, year: number) => {
+    const supabase = createClient()
+    const mm    = String(month).padStart(2, '0')
+    const start = `${year}-${mm}-01`
+    // last day: new Date(year, month, 0) → day-0 of next month = last day of current month
+    const lastDay = new Date(year, month, 0).getDate()
+    const end     = `${year}-${mm}-${String(lastDay).padStart(2, '0')}`
+    const { data, error } = await supabase
+      .from('student_attendances')
+      .select('*, students(name, nis)')
+      .eq('school_id', getSchoolId()!)
+      .gte('date', start)
+      .lte('date', end)
+      .order('date', { ascending: true })
+      .order('id',   { ascending: true })
+    if (error) throw new Error(error.message)
+    return (data ?? []).map(r => ({
+      ...r,
+      student_name: (r.students as { name: string; nis: string } | null)?.name,
+      student_nis:  (r.students as { name: string; nis: string } | null)?.nis,
+    })) as StudentAttendance[]
   },
   getById: async (id: number) => {
     const supabase = createClient()
