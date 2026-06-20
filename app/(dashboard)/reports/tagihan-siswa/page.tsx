@@ -167,7 +167,7 @@ export default function TagihanSiswaPage() {
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                           {['#', 'Jenis Pembayaran', 'Periode', 'Tagihan', 'Dibayar', 'Sisa', 'Status'].map(h => (
-                            <th key={h} className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase text-left ${['Tagihan', 'Dibayar', 'Sisa'].includes(h) ? 'text-right' : ''}`}>{h}</th>
+                            <th key={h} className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase ${['Tagihan', 'Dibayar', 'Sisa'].includes(h) ? 'text-right' : h === 'Status' ? 'text-center' : 'text-left'}`}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -199,7 +199,7 @@ export default function TagihanSiswaPage() {
                                 <td className="px-4 py-2.5 text-right text-gray-700">{formatCurrency(inv.totalDue)}</td>
                                 <td className="px-4 py-2.5 text-right text-green-600">{inv.paid > 0 ? formatCurrency(inv.paid) : <span className="text-gray-300">—</span>}</td>
                                 <td className="px-4 py-2.5 text-right font-semibold text-red-600">{inv.remaining > 0 ? formatCurrency(inv.remaining) : <span className="text-green-600 font-normal">Lunas</span>}</td>
-                                <td className="px-4 py-2.5"><Badge value={inv.status} /></td>
+                                <td className="px-4 py-2.5 text-center"><Badge value={inv.status} /></td>
                               </tr>
                               {payments.map((p, pi) => (
                                 <tr
