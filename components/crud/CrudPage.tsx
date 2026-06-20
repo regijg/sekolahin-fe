@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
 import Modal from '@/components/ui/Modal'
@@ -10,6 +11,7 @@ import SearchableSelect from '@/components/ui/SearchableSelect'
 import { Plus, Pencil, Trash2, Search, RefreshCw, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { FieldConfig, PaginatedData } from '@/types'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface CrudService<T> {
   getAll: (page?: number) => Promise<PaginatedData<T>>
@@ -71,6 +73,17 @@ export default function CrudPage<T extends { id: number }>({
   onCreateSuccess,
   onUpdateSuccess,
 }: CrudPageProps<T>) {
+  const pathname = usePathname()
+  const ROUTE_TO_RESOURCE: Record<string, string> = {
+    'ppdb-applications': 'ppdb',
+  }
+  const rawResource = pathname.split('/').filter(Boolean)[0] ?? ''
+  const resource = ROUTE_TO_RESOURCE[rawResource] ?? rawResource
+  const { can } = usePermissions()
+  const canCreate = can(`create-${resource}`)
+  const canEdit = can(`edit-${resource}`)
+  const canDelete = can(`delete-${resource}`)
+
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
@@ -229,7 +242,7 @@ export default function CrudPage<T extends { id: number }>({
             <RefreshCw size={14} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
-          {!hideAddButton && (
+          {!hideAddButton && canCreate && (
             <button
               onClick={() => openCreate()}
               className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -263,13 +276,15 @@ export default function CrudPage<T extends { id: number }>({
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">#</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50px]">#</th>
                   {visibleFields.map((f) => (
                     <th key={f.name} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
                       {f.label}
                     </th>
                   ))}
-                  <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Aksi</th>
+                  {(canEdit || (!disableDelete && canDelete)) && (
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Aksi</th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -283,26 +298,30 @@ export default function CrudPage<T extends { id: number }>({
                         {renderCell((item as Record<string, unknown>)[f.name], f)}
                       </td>
                     ))}
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => openEdit(item)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                        {!disableDelete && (
-                          <button
-                            onClick={() => setDeleteTarget(item)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Hapus"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                    {(canEdit || (!disableDelete && canDelete)) && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          {canEdit && (
+                            <button
+                              onClick={() => openEdit(item)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          )}
+                          {!disableDelete && canDelete && (
+                            <button
+                              onClick={() => setDeleteTarget(item)}
+                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Hapus"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

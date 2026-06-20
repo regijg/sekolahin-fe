@@ -9,8 +9,14 @@ import { roleService } from '@/lib/services'
 import { getStoredUser } from '@/lib/auth'
 import type { Role, Permission } from '@/types'
 import { Plus, Pencil, Trash2, Search, RefreshCw, AlertCircle, Shield, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
 
 export default function RolesPage() {
+  const { can } = usePermissions()
+  const canCreate = can('create-roles')
+  const canEdit = can('edit-roles')
+  const canDelete = can('delete-roles')
+
   const isSuperAdmin = getStoredUser()?.role === 'super-admin'
   const router = useRouter()
   const qc = useQueryClient()
@@ -62,13 +68,15 @@ export default function RolesPage() {
               <RefreshCw size={14} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
-            <button
-              onClick={() => router.push('/roles/new')}
-              className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              <Plus size={16} />
-              Tambah
-            </button>
+            {canCreate && (
+              <button
+                onClick={() => router.push('/roles/new')}
+                className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                <Plus size={16} />
+                Tambah
+              </button>
+            )}
           </div>
         </div>
 
@@ -94,11 +102,11 @@ export default function RolesPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">#</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50px]">#</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Role</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Deskripsi</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-36">Permissions</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Aksi</th>
+                    {(canEdit || canDelete) && <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Aksi</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -118,24 +126,30 @@ export default function RolesPage() {
                           {role.permissions?.length ?? 0} permission
                         </button>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => router.push(`/roles/${role.id}/edit`)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget(role)}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Hapus"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
+                      {(canEdit || canDelete) && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            {canEdit && (
+                              <button
+                                onClick={() => router.push(`/roles/${role.id}/edit`)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => setDeleteTarget(role)}
+                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -1,6 +1,7 @@
 'use client'
 
 import Sidebar from '@/components/layout/Sidebar'
+import RouteGuard from '@/components/layout/RouteGuard'
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext'
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -12,7 +13,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className={`flex-1 ${marginLeft} flex flex-col min-h-screen overflow-auto transition-all duration-200`}>
-        {children}
+        <RouteGuard>{children}</RouteGuard>
       </div>
     </div>
   )

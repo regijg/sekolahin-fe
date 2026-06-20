@@ -1,11 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import CrudPage from '@/components/crud/CrudPage'
 import Header from '@/components/layout/Header'
 import { permissionService } from '@/lib/services'
-import { getStoredUser } from '@/lib/auth'
 import type { FieldConfig } from '@/types'
 
 const fields: FieldConfig[] = [
@@ -14,19 +11,6 @@ const fields: FieldConfig[] = [
 ]
 
 export default function PermissionsPage() {
-  const router = useRouter()
-  const [allowed, setAllowed] = useState(false)
-
-  useEffect(() => {
-    if (getStoredUser()?.role === 'super-admin') {
-      setAllowed(true)
-    } else {
-      router.replace('/dashboard')
-    }
-  }, [router])
-
-  if (!allowed) return null
-
   return (
     <>
       <Header title="Permissions" />

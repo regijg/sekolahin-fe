@@ -8,7 +8,7 @@ import Header from '@/components/layout/Header'
 import { roleService, permissionService } from '@/lib/services'
 import { getStoredUser } from '@/lib/auth'
 import type { Permission, Role } from '@/types'
-import { ArrowLeft, RefreshCw, Save, Shield } from 'lucide-react'
+import { ArrowLeft, RefreshCw, Save, Shield, Wand2 } from 'lucide-react'
 
 interface RoleFormData {
   name: string
@@ -57,6 +57,24 @@ const ACTION_LABELS: Record<string, string> = {
 
 const ACTION_ORDER = ['view', 'create', 'edit', 'delete']
 
+const MODULES_FULL = [
+  'academic-years', 'semesters', 'majors', 'classrooms', 'enrollments',
+  'subjects', 'teachers', 'parent-guardians', 'students', 'schedules',
+  'student-attendances', 'teacher-attendances',
+  'announcements', 'letters', 'payment-types', 'invoices', 'payments',
+  'inventory-items', 'inventory-mutations', 'canteen-accounts',
+  'canteen-transactions', 'users', 'roles',
+]
+const MODULES_VIEW_ONLY = ['dashboard', 'reports', 'schools', 'permissions']
+
+// ppdb: view pakai nama panjang (view-ppdb-applications), action pakai nama pendek (create-ppdb dst)
+const STANDARD_PERMISSIONS = [
+  ...MODULES_FULL.flatMap(m => ACTION_ORDER.map(a => `${a}-${m}`)),
+  ...MODULES_VIEW_ONLY.map(m => `view-${m}`),
+  'view-ppdb-applications',
+  'create-ppdb', 'edit-ppdb', 'delete-ppdb',
+]
+
 const ACTION_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
   view:   { bg: 'bg-blue-50',   text: 'text-blue-700',   dot: 'bg-blue-400'   },
   create: { bg: 'bg-green-50',  text: 'text-green-700',  dot: 'bg-green-400'  },
@@ -71,11 +89,18 @@ function extractAction(name: string): string {
   return ''
 }
 
+const MODULE_ALIASES: Record<string, string> = {
+  'ppdb': 'ppdb-applications',
+}
+
 function extractModule(name: string): string {
   for (const a of ACTION_ORDER) {
-    if (name.startsWith(`${a}-`)) return name.slice(a.length + 1)
+    if (name.startsWith(`${a}-`)) {
+      const raw = name.slice(a.length + 1)
+      return MODULE_ALIASES[raw] ?? raw
+    }
   }
-  return name
+  return MODULE_ALIASES[name] ?? name
 }
 
 type PermissionWithAction = Permission & { action: string }
@@ -135,6 +160,7 @@ export default function RoleFormPage({ roleId }: Props) {
 
   const [selectedPermissions, setSelectedPermissions] = useState<number[]>([])
   const [formError, setFormError] = useState('')
+  const [generating, setGenerating] = useState(false)
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<RoleFormData>()
 
@@ -168,6 +194,22 @@ export default function RoleFormPage({ roleId }: Props) {
       setFormError(e instanceof Error ? e.message : 'Gagal menyimpan data')
     },
   })
+
+  const existingNames = new Set(allPermissions.map(p => p.name))
+  const missingPermissions = STANDARD_PERMISSIONS.filter(name => !existingNames.has(name))
+
+  const generateMissing = async () => {
+    if (missingPermissions.length === 0) return
+    setGenerating(true)
+    try {
+      for (const name of missingPermissions) {
+        await permissionService.create({ name })
+      }
+      qc.invalidateQueries({ queryKey: ['permissions'] })
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const visiblePermissions = allPermissions.filter(
     (p) => isSuperAdmin || !p.name.endsWith('-schools')
@@ -257,14 +299,27 @@ export default function RoleFormPage({ roleId }: Props) {
 
           {/* Permissions */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Shield size={16} className="text-blue-600" />
                 <h2 className="text-sm font-semibold text-gray-700">Permissions</h2>
               </div>
-              <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
-                {selectedPermissions.length} / {visiblePermissions.length} dipilih
-              </span>
+              <div className="flex items-center gap-2">
+                {missingPermissions.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={generateMissing}
+                    disabled={generating}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors font-medium disabled:opacity-50"
+                  >
+                    <Wand2 size={13} />
+                    {generating ? 'Membuat...' : `Generate ${missingPermissions.length} permission`}
+                  </button>
+                )}
+                <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                  {selectedPermissions.length} / {visiblePermissions.length} dipilih
+                </span>
+              </div>
             </div>
 
             {loadingPerms ? (

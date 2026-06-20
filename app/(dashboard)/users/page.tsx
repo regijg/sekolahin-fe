@@ -9,6 +9,7 @@ import { userService } from '@/lib/services'
 import { getStoredUser } from '@/lib/auth'
 import type { ManagedUser } from '@/types'
 import { Plus, Pencil, Trash2, Search, RefreshCw, AlertCircle, ChevronLeft, ChevronRight, UserCircle } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
 
 const ROLE_COLORS: Record<string, string> = {
   'super-admin':   'bg-purple-100 text-purple-700',
@@ -19,6 +20,11 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export default function UsersPage() {
+  const { can } = usePermissions()
+  const canCreate = can('create-users')
+  const canEdit = can('edit-users')
+  const canDelete = can('delete-users')
+
   const router = useRouter()
   const qc = useQueryClient()
   const currentUser = getStoredUser()
@@ -68,13 +74,15 @@ export default function UsersPage() {
               <RefreshCw size={14} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
-            <button
-              onClick={() => router.push('/users/new')}
-              className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              <Plus size={16} />
-              Tambah
-            </button>
+            {canCreate && (
+              <button
+                onClick={() => router.push('/users/new')}
+                className="flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                <Plus size={16} />
+                Tambah
+              </button>
+            )}
           </div>
         </div>
 
@@ -99,11 +107,11 @@ export default function UsersPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">#</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50px]">#</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-36">Role</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Aksi</th>
+                    {(canEdit || canDelete) && <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-28">Aksi</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -135,25 +143,31 @@ export default function UsersPage() {
                           <span className="text-gray-300 text-xs">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => router.push(`/users/${user.id}/edit`)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Edit"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => currentUser?.id !== user.id && setDeleteTarget(user)}
-                            disabled={currentUser?.id === user.id}
-                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            title={currentUser?.id === user.id ? 'Tidak dapat menghapus akun sendiri' : 'Hapus'}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
+                      {(canEdit || canDelete) && (
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-center gap-1">
+                            {canEdit && (
+                              <button
+                                onClick={() => router.push(`/users/${user.id}/edit`)}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Edit"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                onClick={() => currentUser?.id !== user.id && setDeleteTarget(user)}
+                                disabled={currentUser?.id === user.id}
+                                className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title={currentUser?.id === user.id ? 'Tidak dapat menghapus akun sendiri' : 'Hapus'}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

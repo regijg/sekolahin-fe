@@ -8,6 +8,7 @@ import Modal from '@/components/ui/Modal'
 import { classroomService, teacherService, fetchAllPages } from '@/lib/services'
 import SearchableSelect from '@/components/ui/SearchableSelect'
 import { useSchoolId } from '@/hooks/useSchoolId'
+import { usePermissions } from '@/hooks/usePermissions'
 import type { Classroom } from '@/types'
 import { Plus, Pencil, Trash2, RefreshCw, AlertCircle, School } from 'lucide-react'
 
@@ -32,6 +33,11 @@ interface ClassroomForm {
 }
 
 export default function ClassroomsPage() {
+  const { can } = usePermissions()
+  const canCreate = can('create-classrooms')
+  const canEdit = can('edit-classrooms')
+  const canDelete = can('delete-classrooms')
+
   const schoolId = useSchoolId()
   const qc = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
@@ -140,10 +146,12 @@ export default function ClassroomsPage() {
             <RefreshCw size={14} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
-          <button onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-            <Plus size={16} /> Tambah
-          </button>
+          {canCreate && (
+            <button onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+              <Plus size={16} /> Tambah
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -176,25 +184,31 @@ export default function ClassroomsPage() {
                       <tbody className="divide-y divide-gray-50">
                         {items.map((item, idx) => (
                           <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-4 py-3 text-gray-400 text-xs w-10">{idx + 1}</td>
+                            <td className="px-4 py-3 text-gray-400 text-xs w-[50px]">{idx + 1}</td>
                             <td className="px-4 py-3 text-gray-700 font-medium">{item.name}</td>
                             <td className="px-4 py-3 text-gray-500 text-sm">
                               {item.homeroom_teacher_id
                                 ? teachers.find(t => t.id === item.homeroom_teacher_id)?.name ?? '-'
                                 : <span className="text-gray-300">Belum ada wali kelas</span>}
                             </td>
-                            <td className="px-4 py-3 w-20">
-                              <div className="flex items-center justify-end gap-1">
-                                <button onClick={() => openEdit(item)}
-                                  className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                                  <Pencil size={14} />
-                                </button>
-                                <button onClick={() => setDeleteTarget(item)}
-                                  className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            </td>
+                            {(canEdit || canDelete) && (
+                              <td className="px-4 py-3 w-20">
+                                <div className="flex items-center justify-center gap-1">
+                                  {canEdit && (
+                                    <button onClick={() => openEdit(item)}
+                                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                      <Pencil size={14} />
+                                    </button>
+                                  )}
+                                  {canDelete && (
+                                    <button onClick={() => setDeleteTarget(item)}
+                                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                      <Trash2 size={14} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
