@@ -443,4 +443,5 @@ export interface FieldConfig {
   defaultValue?: unknown
   tableRender?: (value: unknown, row: Record<string, unknown>) => React.ReactNode
   disabled?: boolean
+  tableAlign?: 'left' | 'center' | 'right'
 }

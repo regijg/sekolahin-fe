@@ -37,6 +37,7 @@ interface CrudPageProps<T extends { id: number }> {
   onCreateSuccess?: (item: unknown) => void | Promise<void>
   onUpdateSuccess?: (item: unknown) => void | Promise<void>
   extraFilters?: React.ReactNode
+  onEditClick?: (item: T) => void
 }
 
 function renderCell(value: unknown, field: FieldConfig): React.ReactNode {
@@ -74,6 +75,7 @@ export default function CrudPage<T extends { id: number }>({
   onCreateSuccess,
   onUpdateSuccess,
   extraFilters,
+  onEditClick,
 }: CrudPageProps<T>) {
   const pathname = usePathname()
   const ROUTE_TO_RESOURCE: Record<string, string> = {
@@ -283,7 +285,7 @@ export default function CrudPage<T extends { id: number }>({
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider w-[50px]">#</th>
                   {visibleFields.map((f) => (
-                    <th key={f.name} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                    <th key={f.name} className={`text-${f.tableAlign ?? 'left'} px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap`}>
                       {f.label}
                     </th>
                   ))}
@@ -299,7 +301,7 @@ export default function CrudPage<T extends { id: number }>({
                       {meta ? (meta.current_page - 1) * meta.per_page + idx + 1 : idx + 1}
                     </td>
                     {visibleFields.map((f) => (
-                      <td key={f.name} className="px-4 py-3 text-gray-700 max-w-[200px] truncate">
+                      <td key={f.name} className={`px-4 py-3 text-gray-700 max-w-[200px] truncate text-${f.tableAlign ?? 'left'}`}>
                         {renderCell((item as Record<string, unknown>)[f.name], f)}
                       </td>
                     ))}
@@ -308,7 +310,7 @@ export default function CrudPage<T extends { id: number }>({
                         <div className="flex items-center justify-center gap-1">
                           {canEdit && (
                             <button
-                              onClick={() => openEdit(item)}
+                              onClick={() => onEditClick ? onEditClick(item) : openEdit(item)}
                               className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                               title="Edit"
                             >
