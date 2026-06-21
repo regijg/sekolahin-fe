@@ -108,7 +108,7 @@ export default function InvoicesPage() {
   const [filterClassroomId, setFilterClassroomId] = useState('')
   const [filterYear, setFilterYear] = useState('')
   const [filterMonth, setFilterMonth] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
 
   const activeFilterCount = [filterStatus, filterPaymentTypeId, filterClassroomId, filterYear, filterMonth].filter(Boolean).length
 

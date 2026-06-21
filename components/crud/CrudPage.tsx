@@ -36,6 +36,7 @@ interface CrudPageProps<T extends { id: number }> {
   formBlocked?: boolean
   onCreateSuccess?: (item: unknown) => void | Promise<void>
   onUpdateSuccess?: (item: unknown) => void | Promise<void>
+  extraFilters?: React.ReactNode
 }
 
 function renderCell(value: unknown, field: FieldConfig): React.ReactNode {
@@ -72,6 +73,7 @@ export default function CrudPage<T extends { id: number }>({
   formBlocked = false,
   onCreateSuccess,
   onUpdateSuccess,
+  extraFilters,
 }: CrudPageProps<T>) {
   const pathname = usePathname()
   const ROUTE_TO_RESOURCE: Record<string, string> = {
@@ -223,15 +225,18 @@ export default function CrudPage<T extends { id: number }>({
     <div>
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            type="text"
-            placeholder={`Cari ${title.toLowerCase()}...`}
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          {extraFilters}
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder={`Cari ${title.toLowerCase()}...`}
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           {extraActions}

@@ -1284,6 +1284,35 @@ export const paymentService = {
       page
     )
   },
+  getAllFiltered: async (page = 1, filters: { payment_type_id?: number } = {}) => {
+    const supabase = createClient()
+    const { from, to } = pageRange(page)
+    const selectStr = filters.payment_type_id
+      ? '*, invoices!inner(student_id, payment_type_id, students(name), payment_types(name))'
+      : '*, invoices(student_id, payment_type_id, students(name), payment_types(name))'
+    let q = supabase
+      .from('payments')
+      .select(selectStr, { count: 'exact' })
+      .eq('school_id', getSchoolId()!)
+      .order('date', { ascending: false })
+      .range(from, to)
+    if (filters.payment_type_id) q = q.eq('invoices.payment_type_id', filters.payment_type_id)
+    const { data, count, error } = await q
+    if (error) throw new Error(error.message)
+    return buildPaginated<Payment>(
+      data?.map(r => {
+        const inv = r.invoices as { student_id: number; payment_type_id: number; students: { name: string } | null; payment_types: { name: string } | null } | null
+        return {
+          ...r,
+          student_name: inv?.students?.name,
+          payment_type_name: inv?.payment_types?.name,
+          invoice_label: inv ? `Invoice #${r.invoice_id}` : undefined,
+        }
+      }),
+      count,
+      page
+    )
+  },
   getById: async (id: number) => {
     const supabase = createClient()
     const { data, error } = await supabase

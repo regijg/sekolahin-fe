@@ -6,16 +6,20 @@ import { Layers } from 'lucide-react'
 import CrudPage from '@/components/crud/CrudPage'
 import Header from '@/components/layout/Header'
 import BulkPaymentModal from './BulkPaymentModal'
-import { paymentService, invoiceService, classroomService, studentService, fetchAllPages } from '@/lib/services'
+import { paymentService, invoiceService, classroomService, studentService, paymentTypeService, fetchAllPages } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import type { FieldConfig } from '@/types'
 import { formatCurrency } from '@/lib/utils'
+import SearchableSelect from '@/components/ui/SearchableSelect'
 
 const todayStr = () => new Date().toISOString().split('T')[0]
 
 export default function PaymentsPage() {
   const schoolId = useSchoolId()
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [filterPaymentTypeId, setFilterPaymentTypeId] = useState('')
+
+  const { data: paymentTypes = [] } = useQuery({ queryKey: ['payment-types', 'all'], queryFn: () => fetchAllPages(paymentTypeService) })
   const { data: invoices = [] } = useQuery({ queryKey: ['invoices', 'all'], queryFn: () => fetchAllPages(invoiceService) })
   const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
   const { data: students = [] } = useQuery({ queryKey: ['students', 'all'], queryFn: () => fetchAllPages(studentService) })
@@ -100,6 +104,13 @@ export default function PaymentsPage() {
     },
   ], [invoices, classrooms, students, paidByInvoice])
 
+  const filteredService = useMemo(() => ({
+    ...paymentService,
+    getAll: (page = 1) => paymentService.getAllFiltered(page, {
+      payment_type_id: filterPaymentTypeId ? Number(filterPaymentTypeId) : undefined,
+    }),
+  }), [filterPaymentTypeId])
+
   const hiddenValues = schoolId ? { school_id: schoolId } : {}
 
   return (
@@ -107,9 +118,20 @@ export default function PaymentsPage() {
       <Header title="Pembayaran" />
       <main className="flex-1 p-3 sm:p-6">
         <CrudPage
+          key={filterPaymentTypeId}
           title="Pembayaran"
           queryKey="payments"
-          service={paymentService}
+          service={filteredService}
+          extraFilters={
+            <div className="w-full sm:w-48">
+              <SearchableSelect
+                value={filterPaymentTypeId}
+                onChange={setFilterPaymentTypeId}
+                placeholder="Semua Jenis"
+                options={paymentTypes.map(p => ({ value: p.id, label: p.name }))}
+              />
+            </div>
+          }
           fields={fields}
           hiddenValues={hiddenValues}
           disableDelete
