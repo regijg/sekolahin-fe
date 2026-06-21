@@ -375,19 +375,34 @@ export const semesterService = {
   },
   create: async (data: unknown) => {
     const supabase = createClient()
-    const { data: row, error } = await supabase.from('semesters').insert(data as object).select().single()
+    const { academic_year_name: _, academic_years: __, ...clean } = data as Record<string, unknown>
+    if (clean.active) {
+      await supabase.from('semesters').update({ active: false }).eq('school_id', getSchoolId()!)
+    }
+    const { data: row, error } = await supabase.from('semesters').insert(clean).select().single()
     if (error) throw new Error(error.message)
     return row as Semester
   },
   update: async (id: number, data: unknown) => {
     const supabase = createClient()
-    const { data: row, error } = await supabase.from('semesters').update(data as object).eq('id', id).select().single()
+    const { academic_year_name: _, academic_years: __, ...clean } = data as Record<string, unknown>
+    if (clean.active) {
+      await supabase.from('semesters').update({ active: false }).eq('school_id', getSchoolId()!).neq('id', id)
+    }
+    const { data: row, error } = await supabase.from('semesters').update(clean).eq('id', id).select().single()
     if (error) throw new Error(error.message)
     return row as Semester
   },
   delete: async (id: number) => {
     const supabase = createClient()
     const { error } = await supabase.from('semesters').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+  setActive: async (id: number) => {
+    const supabase = createClient()
+    const schoolId = getSchoolId()!
+    await supabase.from('semesters').update({ active: false }).eq('school_id', schoolId)
+    const { error } = await supabase.from('semesters').update({ active: true }).eq('id', id)
     if (error) throw new Error(error.message)
   },
 }
@@ -1349,6 +1364,148 @@ export const paymentService = {
   delete: async (id: number) => {
     const supabase = createClient()
     const { error } = await supabase.from('payments').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  },
+}
+
+// ─── Student Grades ───────────────────────────────────────────────────────────
+
+export type StudentGradeRow = {
+  student_id: number
+  student_nis: string
+  student_name: string
+  assignment_score: number | null
+  mid_exam_score: number | null
+  final_exam_score: number | null
+  final_grade: number | null
+  predicate: string | null
+}
+
+export const gradeService = {
+  getByContext: async (semesterId: number, classroomId: number, subjectId: number): Promise<StudentGradeRow[]> => {
+    const supabase = createClient()
+    const schoolId = getSchoolId()!
+
+    const { data: semester, error: semErr } = await supabase
+      .from('semesters').select('academic_year_id').eq('id', semesterId).single()
+    if (semErr || !semester) throw new Error('Semester tidak ditemukan')
+
+    const { data: enrollments, error: enrErr } = await supabase
+      .from('enrollments')
+      .select('student_id, students(nis, name)')
+      .eq('school_id', schoolId)
+      .eq('classroom_id', classroomId)
+      .eq('academic_year_id', (semester as { academic_year_id: number }).academic_year_id)
+      .eq('status', 'active')
+    if (enrErr) throw new Error(enrErr.message)
+
+    const list = (enrollments ?? []) as unknown as Array<{ student_id: number; students: { nis: string; name: string } | null }>
+    if (list.length === 0) return []
+
+    const studentIds = list.map(e => e.student_id)
+    const { data: grades } = await supabase
+      .from('student_grades')
+      .select('student_id, assignment_score, mid_exam_score, final_exam_score, final_grade, predicate')
+      .eq('school_id', schoolId)
+      .eq('subject_id', subjectId)
+      .eq('semester_id', semesterId)
+      .in('student_id', studentIds)
+
+    const gradeMap: Record<number, { assignment_score: number | null; mid_exam_score: number | null; final_exam_score: number | null; final_grade: number | null; predicate: string | null }> = {}
+    ;(grades ?? []).forEach((g: { student_id: number; assignment_score: number | null; mid_exam_score: number | null; final_exam_score: number | null; final_grade: number | null; predicate: string | null }) => {
+      gradeMap[g.student_id] = g
+    })
+
+    return list
+      .map(e => {
+        const g = gradeMap[e.student_id]
+        return {
+          student_id: e.student_id,
+          student_nis: e.students?.nis ?? '',
+          student_name: e.students?.name ?? '',
+          assignment_score: g?.assignment_score ?? null,
+          mid_exam_score: g?.mid_exam_score ?? null,
+          final_exam_score: g?.final_exam_score ?? null,
+          final_grade: g?.final_grade ?? null,
+          predicate: g?.predicate ?? null,
+        }
+      })
+      .sort((a, b) => a.student_name.localeCompare(b.student_name))
+  },
+
+  getRekapByClassroom: async (semesterId: number, classroomId: number): Promise<{
+    students: Array<{ id: number; nis: string; name: string }>
+    subjects: Array<{ id: number; code: string; name: string }>
+    grades: Record<number, Record<number, { mid_exam_score: number | null; final_exam_score: number | null; final_grade: number | null; predicate: string | null }>>
+  }> => {
+    const supabase = createClient()
+    const schoolId = getSchoolId()!
+
+    const { data: semester } = await supabase.from('semesters').select('academic_year_id').eq('id', semesterId).single()
+    if (!semester) throw new Error('Semester tidak ditemukan')
+
+    const { data: enrollments, error: enrErr } = await supabase
+      .from('enrollments')
+      .select('student_id, students(nis, name)')
+      .eq('school_id', schoolId)
+      .eq('classroom_id', classroomId)
+      .eq('academic_year_id', (semester as { academic_year_id: number }).academic_year_id)
+      .eq('status', 'active')
+    if (enrErr) throw new Error(enrErr.message)
+
+    const students = ((enrollments ?? []) as unknown as Array<{ student_id: number; students: { nis: string; name: string } | null }>)
+      .map(e => ({ id: e.student_id, nis: e.students?.nis ?? '', name: e.students?.name ?? '' }))
+      .sort((a, b) => a.name.localeCompare(b.name))
+
+    if (students.length === 0) return { students: [], subjects: [], grades: {} }
+
+    const studentIds = students.map(s => s.id)
+    const { data: gradeRows } = await supabase
+      .from('student_grades')
+      .select('student_id, subject_id, mid_exam_score, final_exam_score, final_grade, predicate, subjects(code, name)')
+      .eq('school_id', schoolId)
+      .eq('semester_id', semesterId)
+      .in('student_id', studentIds)
+
+    const subjectMap = new Map<number, { id: number; code: string; name: string }>()
+    ;((gradeRows ?? []) as unknown as Array<{ subject_id: number; subjects: { code: string; name: string } | null }>).forEach((g) => {
+      if (!subjectMap.has(g.subject_id)) {
+        const sub = g.subjects as { code: string; name: string } | null
+        subjectMap.set(g.subject_id, { id: g.subject_id, code: sub?.code ?? '', name: sub?.name ?? '' })
+      }
+    })
+    const subjects = Array.from(subjectMap.values()).sort((a, b) => a.code.localeCompare(b.code))
+
+    const grades: Record<number, Record<number, { mid_exam_score: number | null; final_exam_score: number | null; final_grade: number | null; predicate: string | null }>> = {}
+    ;(gradeRows ?? []).forEach((g: { student_id: number; subject_id: number; mid_exam_score: number | null; final_exam_score: number | null; final_grade: number | null; predicate: string | null }) => {
+      if (!grades[g.student_id]) grades[g.student_id] = {}
+      grades[g.student_id][g.subject_id] = {
+        mid_exam_score: g.mid_exam_score,
+        final_exam_score: g.final_exam_score,
+        final_grade: g.final_grade,
+        predicate: g.predicate,
+      }
+    })
+
+    return { students, subjects, grades }
+  },
+
+  upsertBulk: async (rows: Array<{
+    student_id: number
+    subject_id: number
+    semester_id: number
+    assignment_score: number | null
+    mid_exam_score: number | null
+    final_exam_score: number | null
+    final_grade: number | null
+    predicate: string | null
+  }>) => {
+    const supabase = createClient()
+    const schoolId = getSchoolId()!
+    const data = rows.map(r => ({ ...r, school_id: schoolId }))
+    const { error } = await supabase
+      .from('student_grades')
+      .upsert(data, { onConflict: 'student_id,subject_id,semester_id' })
     if (error) throw new Error(error.message)
   },
 }

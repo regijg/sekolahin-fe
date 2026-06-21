@@ -33,6 +33,7 @@ const MODULE_LABELS: Record<string, string> = {
   'schedules':             'Jadwal',
   'student-attendances':   'Absensi Siswa',
   'teacher-attendances':   'Absensi Guru',
+  'grades':                'Nilai Siswa',
   'ppdb-applications':     'Pendaftaran (PPDB)',
   'announcements':         'Pengumuman',
   'letters':               'Surat Keterangan',
@@ -60,7 +61,7 @@ const ACTION_ORDER = ['view', 'create', 'edit', 'delete']
 const MODULES_FULL = [
   'academic-years', 'semesters', 'majors', 'classrooms', 'enrollments',
   'subjects', 'teachers', 'parent-guardians', 'students', 'schedules',
-  'student-attendances', 'teacher-attendances',
+  'student-attendances', 'teacher-attendances', 'grades',
   'announcements', 'letters', 'payment-types', 'invoices', 'payments',
   'inventory-items', 'inventory-mutations', 'canteen-accounts',
   'canteen-transactions', 'users', 'roles',

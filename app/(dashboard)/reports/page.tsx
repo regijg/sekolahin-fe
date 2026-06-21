@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AlertCircle, BarChart2, Calendar, Package, ShoppingCart, UserPlus, Users, Wallet, BookOpen } from 'lucide-react'
+import { AlertCircle, BarChart2, Calendar, Package, ShoppingCart, UserPlus, Users, Wallet, BookOpen, Award } from 'lucide-react'
 import Header from '@/components/layout/Header'
 
 const groups = [
@@ -21,6 +21,7 @@ const groups = [
       { href: '/reports/absensi-siswa', icon: Calendar, title: 'Absensi Siswa', desc: 'Rekap kehadiran siswa per kelas dan bulan' },
       { href: '/reports/absensi-guru', icon: Calendar, title: 'Absensi Guru', desc: 'Rekap kehadiran guru per bulan' },
       { href: '/reports/daftar-siswa', icon: Users, title: 'Daftar Siswa', desc: 'Data lengkap siswa per kelas' },
+      { href: '/reports/rekap-nilai', icon: Award, title: 'Rekap Nilai', desc: 'Nilai UTS/UAS semua mata pelajaran per kelas per semester' },
     ],
   },
   {

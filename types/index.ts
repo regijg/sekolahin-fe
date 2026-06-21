@@ -404,6 +404,22 @@ export interface DashboardStats {
   student_attendance_today?: number
 }
 
+// Student Grade
+export interface StudentGrade {
+  id: number
+  school_id: number
+  student_id: number
+  subject_id: number
+  semester_id: number
+  assignment_score?: number | null
+  mid_exam_score?: number | null
+  final_exam_score?: number | null
+  final_grade?: number | null
+  predicate?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
 // Generic field config for CrudPage forms
 export type FieldType = 'text' | 'email' | 'number' | 'password' | 'date' | 'time' | 'textarea' | 'select' | 'boolean'
 

@@ -20,6 +20,7 @@ import {
   ClipboardList,
   CalendarCheck,
   CheckSquare,
+  Award,
   UserPlus,
   Megaphone,
   FileText,
@@ -75,6 +76,7 @@ const menuGroups = [
       { href: '/schedules', label: 'Jadwal', icon: ClipboardList, permission: 'view-schedules' },
       { href: '/student-attendances', label: 'Absensi Siswa', icon: CalendarCheck, permission: 'view-student-attendances' },
       { href: '/teacher-attendances', label: 'Absensi Guru', icon: CheckSquare, permission: 'view-teacher-attendances' },
+      { href: '/grades', label: 'Nilai Siswa', icon: Award, permission: 'view-grades' },
     ],
   },
   {
