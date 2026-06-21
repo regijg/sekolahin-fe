@@ -14,7 +14,7 @@ import { formatCurrency, formatDate } from '@/lib/utils'
 import { usePermissions } from '@/hooks/usePermissions'
 
 interface CrudService<T> {
-  getAll: (page?: number) => Promise<PaginatedData<T>>
+  getAll: (page?: number, filters?: Record<string, unknown>) => Promise<PaginatedData<T>>
   create: (data: unknown) => Promise<T>
   update: (id: number, data: unknown) => Promise<T>
   delete: (id: number) => Promise<unknown>
@@ -37,6 +37,7 @@ interface CrudPageProps<T extends { id: number }> {
   onCreateSuccess?: (item: unknown) => void | Promise<void>
   onUpdateSuccess?: (item: unknown) => void | Promise<void>
   extraFilters?: React.ReactNode
+  queryFilters?: Record<string, unknown>
   onEditClick?: (item: T) => void
 }
 
@@ -75,6 +76,7 @@ export default function CrudPage<T extends { id: number }>({
   onCreateSuccess,
   onUpdateSuccess,
   extraFilters,
+  queryFilters,
   onEditClick,
 }: CrudPageProps<T>) {
   const pathname = usePathname()
@@ -91,14 +93,19 @@ export default function CrudPage<T extends { id: number }>({
   const qc = useQueryClient()
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    setPage(1)
+    setSearch('')
+  }, [queryFilters])
   const [modalOpen, setModalOpen] = useState(false)
   const [editItem, setEditItem] = useState<T | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<T | null>(null)
   const [formError, setFormError] = useState('')
 
   const { data: result, isLoading, error, refetch } = useQuery<PaginatedData<T>>({
-    queryKey: [queryKey, page],
-    queryFn: () => service.getAll(page),
+    queryKey: [queryKey, page, queryFilters],
+    queryFn: () => service.getAll(page, queryFilters),
   })
 
   const allData = result?.data ?? []
@@ -241,7 +248,6 @@ export default function CrudPage<T extends { id: number }>({
           </div>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          {extraActions}
           <button
             onClick={() => refetch()}
             className="flex items-center justify-center gap-2 px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -249,6 +255,7 @@ export default function CrudPage<T extends { id: number }>({
             <RefreshCw size={14} />
             <span className="hidden sm:inline">Refresh</span>
           </button>
+          {extraActions}
           {!hideAddButton && canCreate && (
             <button
               onClick={() => openCreate()}

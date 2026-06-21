@@ -6,7 +6,8 @@ import CrudPage from '@/components/crud/CrudPage'
 import Header from '@/components/layout/Header'
 import Modal from '@/components/ui/Modal'
 import StudentStepperModal from '@/components/students/StudentStepperModal'
-import { studentService, parentGuardianService, ppdbService, fetchAllPages } from '@/lib/services'
+import SearchableSelect from '@/components/ui/SearchableSelect'
+import { studentService, parentGuardianService, ppdbService, classroomService, fetchAllPages } from '@/lib/services'
 import { useSchoolId } from '@/hooks/useSchoolId'
 import { usePermissions } from '@/hooks/usePermissions'
 import type { FieldConfig, PPDBApplication } from '@/types'
@@ -19,6 +20,14 @@ export default function StudentsPage() {
   const canCreate = can('create-students')
   const { data: parentGuardians = [] } = useQuery({ queryKey: ['parent-guardians', 'all'], queryFn: () => fetchAllPages(parentGuardianService) })
   const { data: acceptedPpdb = [] } = useQuery<PPDBApplication[]>({ queryKey: ['ppdb', 'accepted'], queryFn: () => ppdbService.getAccepted() })
+  const { data: classrooms = [] } = useQuery({ queryKey: ['classrooms', 'all'], queryFn: () => fetchAllPages(classroomService) })
+
+  const [filterClassroomId, setFilterClassroomId] = useState('')
+
+  const queryFilters = useMemo(() => {
+    if (!filterClassroomId) return undefined
+    return { classroom_id: Number(filterClassroomId) }
+  }, [filterClassroomId])
 
   const [ppdbModalOpen, setPpdbModalOpen] = useState(false)
   const [ppdbLoading, setPpdbLoading] = useState(false)
@@ -151,6 +160,17 @@ export default function StudentsPage() {
           hiddenValues={hiddenValues}
           hideAddButton
           extraActions={extraActions}
+          queryFilters={queryFilters}
+          extraFilters={
+            <div className="w-full sm:w-48">
+              <SearchableSelect
+                value={filterClassroomId}
+                onChange={setFilterClassroomId}
+                placeholder="Semua Kelas"
+                options={classrooms.map(c => ({ value: c.id, label: c.name }))}
+              />
+            </div>
+          }
           onEditClick={(item) => openEdit(item as unknown as Record<string, unknown>)}
         />
       </main>

@@ -610,21 +610,29 @@ export const parentGuardianService = {
 // â”€â”€â”€ Students â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const studentService = {
-  getAll: async (page = 1) => {
+  getAll: async (page = 1, filters?: Record<string, unknown>) => {
     const supabase = createClient()
     const { from, to } = pageRange(page)
-    const { data, count, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = supabase
       .from('students')
       .select('*, classrooms(name), parent_guardians(name)', { count: 'exact' })
       .eq('school_id', getSchoolId()!)
       .order('name')
-      .range(from, to)
+    if (filters?.gender) {
+      const g = String(filters.gender)
+      q = q.in('gender', g === 'L' ? ['L', 'male'] : ['P', 'female'])
+    }
+    if (filters?.classroom_id) {
+      q = q.eq('classroom_id', Number(filters.classroom_id))
+    }
+    const { data, count, error } = await q.range(from, to)
     if (error) throw new Error(error.message)
     return buildPaginated<Student>(
-      data?.map(r => ({
+      data?.map((r: Record<string, unknown>) => ({
         ...r,
-        classroom_name: (r.classrooms as unknown as unknown as { name: string } | null)?.name,
-        parent_guardian_name: (r.parent_guardians as unknown as unknown as { name: string } | null)?.name,
+        classroom_name: (r.classrooms as { name: string } | null)?.name,
+        parent_guardian_name: (r.parent_guardians as { name: string } | null)?.name,
       })),
       count,
       page
